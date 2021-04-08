@@ -105,11 +105,6 @@ When "I try to log in as provider {string} with password {string}" do |username,
   click_button('Sign in')
 end
 
-When "I fill in the {string} login data" do |username|
-  fill_in_login_data(username)
-  click_button('Sign in')
-end
-
 def fill_in_login_data(username, password = 'supersecret')
   find('input', id: 'session_username').fill_in with: username
   find('input', id: 'session_password').fill_in with: password

@@ -16,7 +16,6 @@ module PathsHelper
   class PathFinder
     include System::UrlHelpers.cms_url_helpers
     include System::UrlHelpers.system_url_helpers
-    include CurrentUserHelper
 
     attr_reader :provider
 
@@ -30,9 +29,12 @@ module PathsHelper
       {}
     end
 
-    # def current_account
-    #   CurrentUserHelper.current_account
-    # end
+    # TODO: current_account tries to run 'find' but it is out of scope.
+    # features/support/current_user.rb
+    def current_account
+      # HACK: this is a workaround
+      Account.find 2
+    end
 
     # Maps a name to a path. Used by the
     #

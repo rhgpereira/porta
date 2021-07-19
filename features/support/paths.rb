@@ -486,6 +486,10 @@ World(Module.new do
     when 'the emails settings page'
       edit_admin_site_emails_path
 
+    when /the service "([^"]*)" usage rules page/
+      service = Service.find_by!(name: $1)
+      usage_rules_admin_service_path(service)
+
     #
     # Stats
     #

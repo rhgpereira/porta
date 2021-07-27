@@ -1,5 +1,4 @@
 module Api::ServicesHelper
-
   def link_to_service service
     link_to service.name, admin_service_path(service)
   end

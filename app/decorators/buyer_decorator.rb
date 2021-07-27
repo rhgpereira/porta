@@ -7,11 +7,11 @@ class BuyerDecorator < AccountDecorator
     {
       id: id.to_s,
       name: name,
-      admin: admin_user_display_name,
+      description: "Admin: #{admin_user_display_name}",
       createdAt: created_at.to_s(:long),
       contractedProducts: contracts,
       createApplicationPath: h.admin_buyers_account_applications_url(object),
-      # canSelectPlan: true # TODO needed?
+      multipleAppsAllowed: multiple_applications_allowed?
     }
   end
 

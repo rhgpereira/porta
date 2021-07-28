@@ -50,8 +50,9 @@ module Applications
   end
 
   def most_recently_created_buyers
-    BuyerDecorator.decorate_collection(raw_buyers.limit(20))
-                  .map(&:new_application_data)
+    raw_buyers.limit(20)
+              .decorate
+              .map(&:new_application_data)
   end
 
   def most_recently_updated_products

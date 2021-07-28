@@ -25,7 +25,7 @@ class Buyers::AccountsController < Buyers::BaseController
 
     respond_to do |format|
       format.html
-      format.json { render json: { items: BuyerDecorator.decorate_collection(@accounts).map(&:new_application_data), count: @accounts.total_entries } }
+      format.json { render json: { items: @accounts.map(&:new_application_data), count: @accounts.total_entries } }
     end
   end
 

@@ -23,7 +23,7 @@ class Api::ServicesController < Api::BaseController
 
     respond_to do |format|
       format.html
-      format.json { render json: { items: ServiceDecorator.decorate_collection(services).map(&:new_application_data), count: services.total_entries } } # TODO: is decorate_collection needed?
+      format.json { render json: { items: services.map(&:new_application_data), count: services.total_entries } }
     end
   end
 

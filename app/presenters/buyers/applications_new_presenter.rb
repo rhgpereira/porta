@@ -20,7 +20,7 @@ class Buyers::ApplicationsNewPresenter
   def new_application_form_data
     data = {
       'create-application-path': admin_buyers_account_applications_path(buyer),
-      buyer: BuyerDecorator.new(buyer).new_application_data.to_json,
+      buyer: buyer.decorate.new_application_data.to_json,
       'most-recently-updated-products': most_recently_updated_products.to_json,
       'products-count': raw_products.size,
     }

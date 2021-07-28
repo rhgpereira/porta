@@ -81,7 +81,6 @@ const SelectWithPaginatedModal = <T: Record>({
     if (pageIsEmpty && thereAreMoreItems) {
       setIsLoading(true)
 
-      // TODO: request more than 1 page at once?
       fetchItems({ page, perPage: PER_PAGE })
         .then(({ items, count }) => {
           setPageDictionary({ ...pageDictionary, [page]: items })
@@ -143,7 +142,6 @@ const SelectWithPaginatedModal = <T: Record>({
           }}
           page={page}
           setPage={handleModalOnSetPage}
-          // searchInputRef={searchInputRef}
           onSearch={setQuery}
           sortBy={{ index: 3, direction: SortByDirection.desc }}
         />

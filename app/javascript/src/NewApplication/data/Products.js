@@ -8,10 +8,8 @@ const fetchPaginatedProducts = (path: string, params: FetchItemsRequestParams): 
   const { page, perPage, query = '' } = params
 
   const searchParams = new URLSearchParams({
-    // $FlowIgnore[incompatible-call] bullshit
-    page,
-    // $FlowIgnore[incompatible-call] bullshit
-    per_page: perPage,
+    page: String(page),
+    per_page: String(perPage),
     sort: 'updated_at',
     direction: 'desc'
   })

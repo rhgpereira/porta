@@ -8,10 +8,8 @@ const fetchPaginatedBuyers = (path: string, params: FetchItemsRequestParams): Fe
   const { page, perPage, query = '' } = params
 
   const searchParams = new URLSearchParams({
-    // $FlowIgnore[incompatible-call] bullshit
-    page,
-    // $FlowIgnore[incompatible-call] bullshit
-    per_page: perPage,
+    page: String(page),
+    per_page: String(perPage),
     sort: 'created_at',
     direction: 'desc'
   })

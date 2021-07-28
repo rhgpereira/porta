@@ -39,7 +39,6 @@ type Props<T: Record> = {
   page: number,
   setPage: (number) => void,
   perPage?: number,
-  // searchInputRef: {| current: null | React$ElementRef<typeof HTMLInputElement> |},
   onSearch: (term: string) => void,
   sortBy: { index: number, direction: $Keys<typeof SortByDirection> }
 }
@@ -65,7 +64,20 @@ const PaginatedTableModal = <T: Record>({
   const [selected, setSelected] = useState<T | null>(selectedItem)
   const searchInputRef = useRef<HTMLInputElement | null>(null)
 
-  // TODO: useSearchInputEffect to search on Enter pressed
+  // FIXME: this should really be done by useSearchInputEffect. The ref won't work though.
+  useEffect(() => {
+    if (searchInputRef.current) {
+      const { current } = searchInputRef
+
+      current.addEventListener('input', ({ inputType }: InputEvent) => {
+        if (!inputType) onSearch('')
+      })
+
+      current.addEventListener('keydown', ({ key }: KeyboardEvent) => {
+        if (key === 'Enter' && searchInputRef.current) onSearch(searchInputRef.current.value)
+      })
+    }
+  }, [searchInputRef])
 
   useEffect(() => {
     // Need to use effect since selected won't be re-declared on param item selectedItem change

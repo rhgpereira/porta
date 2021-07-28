@@ -1,7 +1,5 @@
 // @flow
 
-// TODO: this will replace SelectWithModal
-
 import * as React from 'react'
 import { useState, useEffect } from 'react'
 
@@ -97,10 +95,8 @@ const SelectWithPaginatedModal = <T: Record>({
     if (isOnMount) {
       setIsOnMount(false)
     } else {
-      // perPage 20 to get 4 pages
-      fetchItems({ page: 1, perPage: 20, query })
+      fetchItems({ page: 1, perPage: 20, query }) // perPage 20 to get 4 pages
         .then(({ items, count }) => {
-          // Reset all local data (clear dictionary)
           setPageDictionary(paginateCollection(items, PER_PAGE))
           setCount(count)
           setPage(1)
@@ -143,7 +139,7 @@ const SelectWithPaginatedModal = <T: Record>({
           onSelect={handleOnModalSelect}
           onClose={() => {
             setModalOpen(false)
-          // TODO: cancel ongoing requests
+            // TODO: cancel ongoing requests
           }}
           page={page}
           setPage={handleModalOnSetPage}

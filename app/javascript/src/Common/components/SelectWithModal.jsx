@@ -1,5 +1,7 @@
 // @flow
 
+// TODO: This component is implementation is outdated, replace it with SelectWithPaginatedModal
+
 import * as React from 'react'
 
 import {

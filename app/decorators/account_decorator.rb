@@ -12,7 +12,7 @@ class AccountDecorator < ApplicationDecorator
       description: "Admin: #{admin_user_display_name}",
       createdAt: created_at.to_s(:long),
       contractedProducts: contracts,
-      createApplicationPath: h.admin_buyers_account_applications_url(object),
+      createApplicationPath: h.admin_buyers_account_applications_path(object),
       multipleAppsAllowed: multiple_applications_allowed?
     }
   end

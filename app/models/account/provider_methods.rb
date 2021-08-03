@@ -35,7 +35,6 @@ module Account::ProviderMethods
     has_many :backend_api_metrics, through: :backend_apis, source: :metrics
     has_many :proxies, through: :services
     has_many :proxy_rules, through: :proxies
-    has_many :proxy_logs, foreign_key: :provider_id
     has_many :authentication_providers, -> { developer }, dependent: :destroy, inverse_of: :account do
       def build_kind(kind:, **attributes)
         complete_attributes = attributes.merge(account: build.account).symbolize_keys!
@@ -51,37 +50,6 @@ module Account::ProviderMethods
 
     has_many :backend_apis, inverse_of: :account, dependent: :destroy
     has_many :accessible_backend_apis, -> { accessible }, class_name: 'BackendApi'
-
-    has_attached_file :proxy_configs, storage: :s3, path: '.sandbox_proxy/sandbox_proxy_:id.lua'
-    do_not_validate_attachment_file_type :proxy_configs
-
-    has_attached_file :proxy_configs_conf, storage: :s3, path: '.sandbox_proxy_confs/sandbox_proxy_:id.conf'
-    do_not_validate_attachment_file_type :proxy_configs_conf
-
-    unless defined?(::Aws::S3)
-      ## Fallback for not working s3.
-
-      class FakeAttachment < Paperclip::Attachment
-        def initialize_storage; end
-        def flush_deletes; end
-        def flush_writes; end
-      end
-
-      prepend(Module.new do
-        def proxy_configs
-          super
-        rescue LoadError
-          FakeAttachment.new(:proxy_configs, self)
-        end
-
-        def proxy_configs_conf
-          super
-        rescue LoadError
-          FakeAttachment.new(:proxy_configs_conf, self)
-        end
-      end)
-    end
-
 
     has_many :buyer_accounts, class_name: 'Account', foreign_key: 'provider_account_id', dependent: :destroy, inverse_of: :provider_account do
       def latest

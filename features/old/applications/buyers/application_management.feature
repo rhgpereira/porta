@@ -227,5 +227,4 @@ Feature: Buyer's application management
      And I should see "Awesome"
 
     When I go to the new application page for service "Fancy"
-    # FIXME: path to this page returns '/assets' instead of '/admin/services'
-    Then I should be on the services list for buyers page
+    Then I should be on the new application page for service "Fancy"

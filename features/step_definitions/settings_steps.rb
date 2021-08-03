@@ -41,9 +41,3 @@ Then "I should see field {string} {enabled}" do |field, enabled|
 
   assert_not_equal enabled, input.readonly?
 end
-
-Then "I should see button {string} {enabled}" do |field, enabled|
-  button = find('button', text: field)
-
-  assert_not_equal enabled, button['disabled']
-end

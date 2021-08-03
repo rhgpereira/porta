@@ -54,12 +54,13 @@ When "new provider {string} signs up and activates" do |name|
 end
 
 When "I fill in the signup fields as {string}" do |name|
-  step %(I fill in "Username" with "#{name}")
-  step %(I fill in "Email" with "#{name}@3scale.localhost")
-  step %(I fill in "Organization/Group Name" with "#{name}'s stuff")
-  step %(I fill in "Password" with "supersecret")
-  step %(I fill in "Password confirmation" with "supersecret")
-  step %(I press "Sign up")
+  fill_in('Username', with: name)
+  fill_in('Email', with: "#{name}@3scale.localhost")
+  fill_in('Organization/Group Name', with: "#{name}'s stuff")
+  fill_in('Password', with: 'supersecret')
+  fill_in('Password confirmation', with: 'supersecret')
+
+  click_on 'Sign up'
 end
 
 When "I fill in the invalid signup fields" do

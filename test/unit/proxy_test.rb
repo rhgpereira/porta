@@ -29,20 +29,21 @@ class ProxyTest < ActiveSupport::TestCase
       service = FactoryBot.create(:simple_service)
       proxy = Proxy.new(policies_config: 'not-valid-json', service: service)
       refute proxy.valid?
-
       assert_match 'Policies config has invalid format. The Correct format is:', proxy.errors.full_messages.to_sentence
     end
 
     def test_policies_config
-      proxy = Proxy.new(policies_config: "[{\"data\":{\"request\":\"1\",\"config\":\"123\"}}]")
-      assert_equal proxy.policies_config.first, { "data" => { "request" => "1", "config" => "123" }}
+      policy_config_example = { name: 'my-policy', version: '1.0.0', configuration: {}, enabled: true }.stringify_keys
+      proxy = Proxy.new(policies_config: [policy_config_example].to_json)
+      assert_equal proxy.policies_config.send(:policies_config).first, Proxy::PolicyConfig.new(policy_config_example)
+
+      proxy.stubs(:provider_can_use?).returns(false)
       assert_equal 2, proxy.policies_config.count
       # it should not add default policy again
       assert_equal 2, proxy.policies_config.count
     end
 
     def test_policy_chain
-      rolling_updates_on
       raw_config = [{
                       name: 'cors',
                       humanName: 'Cors Proxy',
@@ -191,20 +192,6 @@ class ProxyTest < ActiveSupport::TestCase
     end
   end
 
-  def test_apicast_configuration_driven
-    @proxy.provider.stubs(:provider_can_use?).with(:apicast_v1).returns(true)
-    @proxy.provider.stubs(:provider_can_use?).with(:apicast_v2).returns(true)
-
-    @proxy.apicast_configuration_driven = true
-    assert @proxy.apicast_configuration_driven
-
-    @proxy.apicast_configuration_driven = false
-    refute @proxy.apicast_configuration_driven
-
-    @proxy.provider.stubs(:provider_can_use?).with(:apicast_v1).returns(false)
-    assert @proxy.apicast_configuration_driven
-  end
-
   test 'hosts' do
     @proxy.endpoint = 'http://foobar.example.com:3000/path'
     @proxy.sandbox_endpoint = 'http://example.com:8080'
@@ -291,7 +278,6 @@ class ProxyTest < ActiveSupport::TestCase
   end
 
   test 'proxy api backend with base path' do
-    @account.stubs(:provider_can_use?).with(:apicast_v1).returns(true)
     @account.stubs(:provider_can_use?).with(:apicast_v2).returns(true)
     @account.expects(:provider_can_use?).with(:proxy_private_base_path).at_least_once.returns(false)
     backend_api = @proxy.backend_api
@@ -478,32 +464,18 @@ class ProxyTest < ActiveSupport::TestCase
     end
   end
 
-  test 'sandbox_deployed? when last proxy log entry says so' do
-    proxy = FactoryBot.create(:proxy, created_at: Time.now)
-    refute proxy.sandbox_deployed?
-    FactoryBot.create(:proxy_log, provider: proxy.service.account, status: 'Deployed successfully.', created_at: Time.now - 1.minute)
-    refute proxy.sandbox_deployed?
-    FactoryBot.create(:proxy_log, provider: proxy.service.account, status: 'Deployed successfully.', created_at: Time.now + 1.minute)
-    assert proxy.sandbox_deployed?
-    FactoryBot.create(:proxy_log, provider: proxy.service.account, status: 'Deploy failed.', created_at: Time.now + 2.minutes)
-    refute proxy.sandbox_deployed?
-  end
-
   test 'save_and_deploy' do
     proxy = FactoryBot.build(:proxy,
                               api_backend: 'http://example.com',
                               api_test_path: '/path',
-                              apicast_configuration_driven: false)
-    ::ApicastV1DeploymentService.any_instance.expects(:deploy).with(proxy).returns(true)
+                              apicast_configuration_driven: true)
+    ::ApicastV2DeploymentService.any_instance.expects(:call).returns(true)
 
-    analytics.expects(:track).with('Sandbox Proxy Deploy', success: true)
+    analytics.expects(:track).with('Sandbox Proxy Deploy', {success: true})
     analytics.expects(:track).with('Sandbox Proxy updated',
-                                   api_backend: 'http://example.com:80',
-                                   api_test_path: '/path',
-                                   success: true)
-    analytics.expects(:track).with('APIcast Hosted Version Change', {enabled: false, service_id: proxy.service_id, deployment_option: 'hosted'})
-    Logic::RollingUpdates.stubs(skipped?: true)
-
+                                   {api_backend: 'http://example.com:80',
+                                    api_test_path: '/path',
+                                    success: true})
     assert proxy.save_and_deploy
     assert proxy.persisted?
   end
@@ -577,12 +549,64 @@ class ProxyTest < ActiveSupport::TestCase
     policy_config1 = { name: 'my-policy', version: '1.0.0', configuration: {}, enabled: true }.stringify_keys
     policy_config2 = { name: 'my-other-policy', version: '0.5.0', configuration: {}, enabled: false }.stringify_keys
 
-    @proxy.policies_config = [policy_config1, policy_config2].map { |attr| Proxy::PolicyConfig.new(attr) }
+    @proxy.policies_config = [policy_config1, policy_config2]
     @proxy.save!
     @proxy.reload
 
-    assert_equal policy_config1, @proxy.find_policy_config_by(name: 'my-policy', version: '1.0.0')
-    assert_equal policy_config2, @proxy.find_policy_config_by(name: 'my-other-policy', version: '0.5.0')
+    assert_equal policy_config1, @proxy.find_policy_config_by(name: 'my-policy', version: '1.0.0').to_h
+    assert_equal policy_config2, @proxy.find_policy_config_by(name: 'my-other-policy', version: '0.5.0').to_h
+  end
+
+  test 'policies config changes' do
+    policies_config = JSON.parse(@proxy.policies_config.to_json).freeze
+    policy_config_example = { name: 'my-policy', version: '1.0.0', configuration: {}, enabled: true }.stringify_keys
+
+    @proxy.policies_config = policies_config + [policy_config_example]
+    assert @proxy.policies_config_changed?
+
+    @proxy.policies_config = policies_config
+    refute @proxy.policies_config_changed?
+  end
+
+  test 'single policy attribute changes are detected' do
+    policy_example = { name: 'my-policy', version: '1.0.0', configuration: {}, enabled: true }.stringify_keys.freeze
+    example_changes = [
+      {"configuration" => {"key" => "value"}},
+      {"version" => "42"},
+      {"name" => "another_name"},
+      {"enabled" => !policy_example["enabled"]},
+    ]
+    @proxy.policies_config = [policy_example, Proxy::PolicyConfig.default.as_json]
+    @proxy.save!
+
+    example_changes.each do |change|
+      puts change
+      @proxy.policies_config = [policy_example.merge(change), Proxy::PolicyConfig.default.as_json]
+      assert @proxy.policies_config_changed?
+      assert_equal 2, @proxy.policies_config.count
+    end
+  end
+
+  test 'policies config casting' do
+    json_string = @proxy.policies_config.to_json
+    json = JSON.parse json_string
+
+    @proxy.policies_config = json
+
+    refute @proxy.changed?
+
+    @proxy.policies_config = json_string
+
+    refute @proxy.changed?
+  end
+
+  test 'policy apicast not added when it already exists' do
+    @proxy.policies_config = [
+      { "name" => "routing", "version" => "builtin", "enabled" => true, "configuration" => {} },
+      { "name" => "apicast", "version" => "4.12", "configuration" => {} },
+      { 'name' => 'cors', 'version' => '0.0.1', 'configuration' => { 'hello' => 'Aloha' } },
+    ]
+    assert @proxy.policies_config.count, 3
   end
 
   test 'domain changes events on update of hosted proxy' do

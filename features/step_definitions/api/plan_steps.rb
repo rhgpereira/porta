@@ -1,19 +1,19 @@
 # frozen_string_literal: true
 
 Then "I should not see any plans" do
-  within plans do
+  within plans_table do
     page.should have_css('tbody tr', size: 0)
   end
 end
 
 Then "I should see a {published} plan {string}" do |published, name|
-  within plans do
+  within plans_table do
     assert table_row_with_cells?(name, published ? 'published' : 'hidden')
   end
 end
 
 Then "I {should} see plan {string}" do |visible, name|
-  within plans do
+  within plans_table do
     method = visible ? :have_css : :have_no_css
     page.should send(method, 'td', text: name)
   end
@@ -24,29 +24,19 @@ When "I follow {string} for {plan}" do |label, plan|
 end
 
 When "I select {string} as default plan" do |plan|
-  # if React default plan select
-  if (select = find(:css, '#default_plan_card .pf-c-select'))
-    select.find(:css, '.pf-c-button.pf-c-select__toggle-button').click unless select[:class].include?('pf-m-expanded')
-    select.find('.pf-c-select__menu-item', text: plan).click
-  else
-    select plan
-  end
+  # TODO: use #pf4_select ?
+  select = default_plan_select
+  select.find(:css, '.pf-c-button.pf-c-select__toggle-button').click unless select[:class].include?('pf-m-expanded')
+  select.find('.pf-c-select__menu-item', text: plan).click
 end
 
-Then "I {should} see {string} in the default plans list" do |visible, plan_name|
-  method = visible ? :have_content : :have_no_content
-  # if React default plan select
-  if (select = find(:css, '#default_plan_card .pf-c-select'))
-    select.find(:css, '.pf-c-button.pf-c-select__toggle-button').click unless select[:class].include?('pf-m-expanded')
-    select.should send(method, plan_name)
-  else
-    within default_plan do
-      page.should send(method, plan_name)
-    end
-  end
+Then "I should see {string} in the default plans list" do |plan_name|
+  select = default_plan_select
+  select.find(:css, '.pf-c-button.pf-c-select__toggle-button').click unless select[:class].include?('pf-m-expanded')
+  select.should have_content(plan_name)
 end
 
-def plans
+def plans_table
   if page.has_css?('#plans_table .pf-c-table')
     find('#plans_table .pf-c-table')
   else
@@ -55,8 +45,8 @@ def plans
   end
 end
 
-def default_plan
-  find(:css, "select#default_plan")
+def default_plan_select
+  find(:css, '#default_plan_card .pf-c-select')
 end
 
 def new_application_plan_form

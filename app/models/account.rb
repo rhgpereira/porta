@@ -2,6 +2,9 @@
 
 class Account < ApplicationRecord
   attribute :credit_card_expires_on, :date
+  self.ignored_columns = %i[proxy_configs_file_name proxy_configs_content_type proxy_configs_file_size
+                            proxy_configs_updated_at proxy_configs_conf_file_name proxy_configs_conf_content_type
+                            proxy_configs_conf_file_size proxy_configs_conf_updated_at]
 
   # need to reset column information to clear column_names and such
   reset_column_information
@@ -9,7 +12,6 @@ class Account < ApplicationRecord
   # it has to be THE FIRST callback after create, so associations get the tenant id
   after_create :update_tenant_id, if: :provider?, prepend: true
 
-  include ::ThreeScale::MethodTracing
 
   include Fields::Fields
   required_fields_are :org_name
@@ -36,7 +38,6 @@ class Account < ApplicationRecord
   include Logic::ProviderSignup::Provider
   include Logic::ProviderUpgrade::Provider
   include Logic::RollingUpdates::Provider
-  include Logic::NginxProxy::Provider
   include Logic::Contracting::Provider
   include Logic::ProviderSettings
   include Logic::ProviderConstraints
@@ -267,9 +268,8 @@ class Account < ApplicationRecord
             :billing_address_name, :billing_address_address1, :billing_address_address2, :billing_address_city,
             :billing_address_state, :billing_address_country, :billing_address_zip, :billing_address_phone,
             :org_legaladdress_cont, :city, :state_region, :state, :timezone, :from_email, :primary_business,
-            :business_category, :zip, :self_domain, :s3_prefix, :proxy_configs_file_name, :support_email,
-            :finance_support_email, :billing_address_first_name, :billing_address_last_name, :proxy_configs_conf_file_name,
-            :proxy_configs_conf_content_type, :po_number, :vat_code, :fiscal_code, :proxy_configs_content_type,
+            :business_category, :zip, :self_domain, :s3_prefix, :support_email, :finance_support_email,
+            :billing_address_first_name, :billing_address_last_name, :po_number, :vat_code, :fiscal_code,
             length: { maximum: 255 }
 
   validates :extra_fields, :invoice_footnote, :vat_zero_text,
@@ -524,8 +524,6 @@ class Account < ApplicationRecord
 
     xml.to_xml
   end
-
-  add_three_scale_method_tracer :to_xml, 'ActiveRecord/Account/to_xml'
 
   def generate_s3_prefix
     self.s3_prefix = if org_name

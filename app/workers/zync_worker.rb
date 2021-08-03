@@ -316,9 +316,9 @@ class ZyncWorker
 
     http_put(tenant_url, tenant, event_id)
 
-    [ tenant, provider ]
+    [tenant, provider]
   rescue ActiveRecord::RecordNotFound
-    [ { id: event.tenant_id }, nil ]
+    [{ id: event.tenant_id }, nil]
   end
 
   def provider_endpoint(provider)
@@ -326,7 +326,7 @@ class ZyncWorker
     return root_url if root_url
 
     # This is far for perfect, but there is no request in workers to infer the domain from.
-    options = { host: provider.admin_domain }
+    options = { host: provider.external_admin_domain }
     options.reverse_merge!(Rails.env.development? ? { port: 3000 } : ActionMailer::Base.default_url_options)
     System::UrlHelpers.system_url_helpers.root_url(options)
   end

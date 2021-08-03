@@ -17,6 +17,20 @@ class BackendApiDecorator < ApplicationDecorator
     }
   end
 
+  def products_table_data
+    ServiceDecorator.decorate_collection(services.accessible.sort_by(&:name))
+                    .map(&:table_data)
+                    .to_json
+  end
+
+  def table_data
+    {
+      name: name,
+      description: private_endpoint,
+      href: link
+    }
+  end
+
   alias link api_selector_api_link
 
   private

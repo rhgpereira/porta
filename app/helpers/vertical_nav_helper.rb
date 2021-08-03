@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module VerticalNavHelper
+  include PlansHelper
+
   def vertical_nav_data
     {
       'current-api': current_api.to_json(root: false, only: %i[name]),
@@ -90,8 +92,8 @@ module VerticalNavHelper
   def audience_accounts_items
     items = []
     items << {id: :listing,       title: 'Listing',       path: admin_buyers_accounts_path}           if can?(:manage, :partners)
-    items << {id: :account_plans,  title: 'Account Plans', path: admin_buyers_account_plans_path}      if can?(:manage, :plans) && current_account.settings.account_plans.allowed? && current_account.settings.account_plans_ui_visible?
-    items << {id: :subscriptions, title: 'Subscriptions', path: admin_buyers_service_contracts_path}  if can?(:manage, :service_contracts) && current_account.settings.service_plans.allowed? && current_account.settings.service_plans_ui_visible?
+    items << {id: :account_plans,  title: 'Account Plans', path: admin_buyers_account_plans_path}     if account_plans_management_visible?
+    items << {id: :subscriptions, title: 'Subscriptions', path: admin_buyers_service_contracts_path}  if service_plans_management_visible?
 
     if can?(:manage, :settings)
       items << {                          title: 'Settings'}
@@ -104,8 +106,8 @@ module VerticalNavHelper
 
   def audience_applications_items
     items = []
-    items << {id: :listing, title: 'Listing', path: admin_buyers_applications_path} if can?(:manage, :partners)
-    items << {id: :alerts,  title: 'Alerts',  path: admin_alerts_path}              if can?(:manage, :monitoring)
+    items << {id: :listing, title: 'Listing', path: provider_admin_applications_path} if can?(:manage, :partners)
+    items << {id: :alerts,  title: 'Alerts',  path: admin_alerts_path}                if can?(:manage, :monitoring)
     items
   end
 
@@ -143,7 +145,7 @@ module VerticalNavHelper
     end
 
     items << {title: ' '} # Blank space
-    items << {title: 'Visit Portal', path: access_code_url(host: current_account.domain, cms_token: current_account.settings.cms_token!, access_code: current_account.site_access_code).html_safe, target: '_blank'}
+    items << {title: 'Visit Portal', path: access_code_url(host: current_account.external_domain, cms_token: current_account.settings.cms_token!, access_code: current_account.site_access_code).html_safe, target: '_blank'}
 
     if can?(:manage, :portal)
       items << {                                   title: 'Legal Terms'}

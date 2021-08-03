@@ -15,8 +15,6 @@ en:
     update_production_success: 'Proxy settings deployed'
     update_error: "Couldn't update the Staging Configuration"
     update_success: '%{environment} Configuration Updated'
-    async_update_success: 'Staging Configuration Updated'
-    async_update_error: "Couldn't update the Staging Configuration"
     proxy_pro_update_sucess: 'Proxy settings saved.'
     stale_object: 'Someone else edited the Staging Configuration'
     apicast_version_reverted: 'The APIcast version for this service was successfully reverted to the old APIcast.'
@@ -24,7 +22,6 @@ en:
     apicast_version_not_reverted: 'The APIcast version for this service could not be reverted'
     apicast_version_not_upgraded: 'The APIcast version for this service could not be upgraded'
     oidc_not_available_on_old_apicast: 'OpenID Connect is not supported for the old APIcast. Pick a different authentication option before reverting back.'
-    edit_deployment_configuration: 'edit %{deployment} configuration'
   logos_controller:
     update_success: 'The logo was successfully uploaded.'
     destroy_success: 'The logo was successfully deleted.'
@@ -742,6 +739,11 @@ en:
         street_address: Street Address
     errors:
       models:
+        policies_config:
+          attributes:
+            base:
+              invalid_format: "has invalid format. The Correct format is: [{ \"name\": \"apicast\"... }]"
+              missing_apicast: "is missing apicast policy"
         sso_token:
           cannot_be_generated: SSO Token cannot be generated
           one_of_user_id_or_username_is_required: One of user_id or username is required
@@ -818,8 +820,6 @@ en:
               invalid: "the accepted format is 'scheme://address(:port)(/path)'. Accepted schemes are http, https, ws and wss"
         proxy:
           attributes:
-            policies_config:
-              invalid_format: "has invalid format. The Correct format is: [{ \"name\": \"apicast\"... }]"
             api_backend:
               invalid: "the accepted format is 'scheme://address(:port)(/path)'. Accepted schemes are http, https, ws and wss"
             api_test_path:
@@ -1099,14 +1099,14 @@ en:
 
     services:
       create:
-        notice: "%{resource_type} created."
+        notice: "Product created."
         errors:
-          default: "Couldn't create %{resource_type}. Check your Plan limits"
+          default: "Couldn't create Product. Check your Plan limits"
       update:
-        notice: "%{resource_type} information updated."
-        error: "Couldn't update %{resource_type}."
+        notice: "Product information updated."
+        error: "Couldn't update Product."
       destroy:
-        notice: "%{resource_type} '%{resource_name}' will be deleted shortly. You will receive a notification when it is done"
+        notice: "Product '%{resource_name}' will be deleted shortly. You will receive a notification when it is done"
 
   proxy:
     credentials_location:
@@ -1122,17 +1122,6 @@ en:
         current_password: |
           Any other active session(s) for this user account will be terminated when you update your personal details
           to be sure it's you and not somebody else trying to lock you out of your account.
-      deployment_option_gateway: |
-        A gateway is the most maintainable and scalable way to integrate your API with 3scale as you won't have to touch your API at all;
-        a gateway sits in front of your API as a completely separate entity. Developers will make requests on the gateway,
-        the gateway will communicate (asynchronously) with 3scale for Access Control & Traffic Reporting and forward the original requests to your API.
-      deployment_option_plugin: |
-        Plugins provide a wrapper for the 3scale API that enables API Access Control and API Traffic Reporting without having to run another server.
-        A plugin lives inside the code that powers your API. The plugin calls the 3scale API for Access Control & Traffic Reporting.
-      deployment_option_service_mesh: |
-        The term service mesh is used to describe the network of microservices that make up the applications and the interactions between them.
-        As a service mesh grows in size and complexity, it can become harder to understand and manage. Its requirements can include discovery, load balancing, failure recovery, metrics, and monitoring.
-        A service mesh also often has more complex operational requirements, like A/B testing, canary releases, rate limiting, access control, and end-to-end authentication.
       subdomain: "The domain name is the initial temporary domain name for your developer portal - you can change this to your own domain name later."
       handler: "Do you use any markup language?"
       liquid_enabled: "Process Liquid tags and drops?"
@@ -1251,7 +1240,7 @@ en:
         buyers_manage_keys: "Developers can manage Keys"
         referrer_filters_required: "Require referrer filtering"
         custom_keys_enabled: "Enable custom keys"
-        buyer_key_regenerate_enabled: "Allow developers to regenerate access keys"
+        buyer_key_regenerate_enabled: "Allow developers to regenerate client secret"
         mandatory_app_key: "Require at least 1 application key"
         buyer_can_select_plan: "Developers can select a plan when creating a new application"
         backend_version: "Authentication: Parameters developers must send to the API in order to identify themselves:"

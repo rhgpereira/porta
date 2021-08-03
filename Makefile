@@ -4,8 +4,6 @@ PROJECT = $(subst @,,$(notdir $(subst /workspace,,$(PROJECT_PATH))))
 
 export PROJECT
 
-BUNDLE_GEMFILE ?= Gemfile
-
 TMP = tmp/capybara tmp/junit tmp/codeclimate coverage log/test.searchd.log
 
 DB ?= mysql
@@ -86,12 +84,6 @@ build: ## Build the container image using one of the docker-compose file set by 
 build:
 	@DB=$(DB) docker-compose build system
 
-bundle: ## Installs dependencies using bundler. Run this after you make some changes to Gemfile.
-bundle: Gemfile.prod Gemfile
-	BUNDLE_GEMFILE=Gemfile bundle lock
-	cp Gemfile.lock Gemfile.prod.lock
-	BUNDLE_GEMFILE=Gemfile.prod bundle lock
-
 clean: ## Remove all components and volumes
 clean:
 	-docker-compose down 2>/dev/null
@@ -117,6 +109,7 @@ oracle-database:
 		--security-opt apparmor=docker-default \
 		-p 1521:1521 -p 5500:5500 \
 		--name oracle-database \
+		-v $(ORACLE_DATA_DIR)/oracle-database:/opt/oracle/oradata \
 		-e ORACLE_PDB=systempdb \
 		-e ORACLE_SID=threescale \
 		-e ORACLE_PWD=threescalepass \

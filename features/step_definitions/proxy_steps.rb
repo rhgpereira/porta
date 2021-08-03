@@ -68,12 +68,19 @@ Given "the service uses app_id/app_key as authentication method" do
 end
 
 Given "I add a new mapping rule with method {string} pattern {string} delta {string} and metric {string}" do |method, pattern, delta, metric|
-  click_on 'Add Mapping Rule'
-  within(page.find('form.proxy_rule')) do
-    find("select#proxy_rule_http_method option[value='#{method}']").select_option
+  visit "#{URI.parse(current_url).path}/new"
+  within('#new-mapping-rule-form form') do
+    pf4_select(method, from: 'Verb')
     find('input#proxy_rule_pattern').set pattern
     find('input#proxy_rule_position').set position
-    find('select#proxy_rule_metric_id option', text: metric).select_option
+    within('#wrapper_metric') do
+      find('.pf-c-radio__input').set(true)
+      select = find('.pf-c-select')
+      within select do
+        find('.pf-c-select__toggle').click unless select['class'].include?('pf-m-expanded')
+        click_on(metric)
+      end
+    end
   end
 end
 

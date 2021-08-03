@@ -21,6 +21,10 @@ Given "(a )default service of {provider} has name {string}" do |provider, name|
   provider.first_service!.update!(name: name)
 end
 
+Given "{service} becomes inaccessible" do |service|
+  service.update!(state: 'deleted')
+end
+
 Given "the service {string} of {provider} has deployment option {string}" do |service_name, provider, deployment_option|
   provider.services.find_by!(name: service_name)
                    .update!(deployment_option: deployment_option)

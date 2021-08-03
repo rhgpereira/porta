@@ -11,20 +11,24 @@ import {
   toSelectOption,
   toSelectOptionObject,
   SelectOptionObject
-} from 'utilities/patternfly-utils'
+} from 'utilities'
 import { TableModal } from 'Common'
 
-import type { Record } from 'utilities/patternfly-utils'
+import type { Record } from 'utilities'
+
+import './SelectWithModal.scss'
 
 type Props<T: Record> = {
   item: T | null,
   items: T[],
   onSelect: (T | null) => void,
   isDisabled?: boolean,
+  isValid?: boolean,
   label: string,
   id: string,
   name?: string,
   helperText?: React.Node,
+  helperTextInvalid?: string,
   placeholderText?: string,
   maxItems?: number,
   header?: string,
@@ -42,10 +46,12 @@ const SelectWithModal = <T: Record>({
   items,
   onSelect,
   isDisabled,
+  isValid,
   label,
   id,
   name,
   helperText,
+  helperTextInvalid,
   placeholderText,
   maxItems = MAX_ITEMS,
   header = HEADER,
@@ -53,8 +59,10 @@ const SelectWithModal = <T: Record>({
   cells,
   modalTitle
 }: Props<T>): React.Node => {
+  const emptyItem = { id: -1, name: 'No results found', disabled: true, privateEndpoint: '' }
   const headerItem = { id: 'header', name: header, disabled: true, className: 'pf-c-select__menu-item--group-name' }
-  const footerItem = { id: 'foo', name: footer }
+  const footerItem = { id: 'foo', name: footer, className: 'pf-c-select__menu-item--view-all' }
+  const shouldShowFooter = items.length > MAX_ITEMS
 
   const [expanded, setExpanded] = React.useState(false)
   const [modalOpen, setModalOpen] = React.useState(false)
@@ -73,24 +81,33 @@ const SelectWithModal = <T: Record>({
     }
   }
 
-  const getItems = items => [
-    headerItem,
-    ...items.slice(0, maxItems).map(i => ({ ...i, className: 'pf-c-select__menu-item-description' })),
-    footerItem
-  ]
+  // Takes an array of local items and returns the list of options for the select.
+  // If the sum of all items is higher than 20, display link button to "View all Products"
+  const getSelectOptions = (forItems: Array<T>) => {
+    const selectItems = [headerItem]
 
-  const options = getItems(items).map(toSelectOption)
+    if (forItems.length === 0) {
+      selectItems.push(emptyItem)
+    } else {
+      selectItems.push(...forItems.slice(0, maxItems).map(i => ({ ...i, className: 'pf-c-select__menu-item-description' })))
+    }
 
-  const handleOnFilter = (e) => {
-    const { value } = e.target
+    if (shouldShowFooter) {
+      selectItems.push(footerItem)
+    }
+
+    return selectItems.map(toSelectOption)
+  }
+
+  const options = getSelectOptions(items)
+
+  const handleOnFilter = (e: SyntheticEvent<HTMLInputElement>) => {
+    const { value } = e.currentTarget
     const term = new RegExp(value, 'i')
 
-    const filteredRecords: T[] = value !== '' ? items.filter(b => term.test(b.name)) : items
-    const filteredItems = filteredRecords.length === 0
-      ? [{ id: -1, name: 'No results found', disabled: true, privateEndpoint: '' }, footerItem]
-      : getItems(filteredRecords)
+    const filteredItems = value !== '' ? items.filter(b => term.test(b.name)) : items
 
-    return filteredItems.map(toSelectOption)
+    return getSelectOptions(filteredItems)
   }
 
   return (
@@ -100,6 +117,8 @@ const SelectWithModal = <T: Record>({
         label={label}
         fieldId={id}
         helperText={helperText}
+        helperTextInvalid={helperTextInvalid}
+        isValid={isValid}
       >
         {item && <input type="hidden" name={name} value={item.id} />}
         <Select
@@ -112,7 +131,7 @@ const SelectWithModal = <T: Record>({
           isDisabled={isDisabled}
           onClear={() => onSelect(null)}
           aria-labelledby={id}
-          className="pf-c-select__menu--with-fixed-link"
+          className={shouldShowFooter ? 'pf-c-select__menu--with-fixed-link' : undefined}
           isGrouped
           onFilter={handleOnFilter}
         >

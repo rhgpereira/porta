@@ -14,7 +14,6 @@
 .deploy_info
 .ruby-gemset
 .ruby-version
-.tool-versions
 .pt
 .pivotalrc
 .pivotal_cache
@@ -114,7 +113,6 @@ public/.com.apple*
 /public/javascripts/cache/
 
 /test/unit/stats/tmp/
-/test/proxy_helpers/sentiment/log/thin.log
 
 vendor/active-docs/.gitignore
 vendor/active-docs/.gitmodules

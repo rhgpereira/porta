@@ -1,4 +1,13 @@
 GIT
+  remote: https://github.com/3scale/activejob-uniqueness.git
+  revision: fc560d1ab5552dc3a1602d4aaa7caaa8eba5791f
+  branch: main
+  specs:
+    activejob-uniqueness (0.2.0)
+      activejob (>= 4.2, < 7)
+      redlock (>= 1.2, < 2)
+
+GIT
   remote: https://github.com/3scale/ci_reporter_shell.git
   revision: 30b30d655512891f56463e5f1fa125ea1f2df886
   specs:
@@ -157,8 +166,8 @@ GEM
       activerecord (>= 3.0)
     acts_as_tree (2.9.0)
       activerecord (>= 3.0.0)
-    addressable (2.6.0)
-      public_suffix (>= 2.0.2, < 4.0)
+    addressable (2.8.0)
+      public_suffix (>= 2.0.2, < 5.0)
     after_commit_queue (1.1.0)
       rails (>= 3.0)
     aggregate_root (0.3.6)
@@ -185,7 +194,7 @@ GEM
       join_dependency (~> 0.1.2)
       polyamorous (~> 1.3)
     backport (1.1.2)
-    backports (3.18.2)
+    backports (3.21.0)
     bcrypt (3.1.13)
     benchmark (0.1.0)
     binding_of_caller (0.8.0)
@@ -203,13 +212,13 @@ GEM
       uniform_notifier (~> 1.10.0)
     byebug (11.1.3)
     cancancan (2.3.0)
-    capybara (3.33.0)
+    capybara (3.35.3)
       addressable
       mini_mime (>= 0.1.3)
       nokogiri (~> 1.8)
       rack (>= 1.6.0)
       rack-test (>= 0.6.3)
-      regexp_parser (~> 1.5)
+      regexp_parser (>= 1.5, < 3.0)
       xpath (~> 3.2)
     childprocess (3.0.0)
     chronic (0.10.2)
@@ -248,38 +257,40 @@ GEM
       compass (~> 1.0.0)
       sass-rails (< 5.1)
       sprockets (< 4.0)
-    concurrent-ruby (1.1.7)
-    connection_pool (2.2.3)
-    crack (0.4.3)
-      safe_yaml (~> 1.0.0)
+    concurrent-ruby (1.1.9)
+    connection_pool (2.2.5)
+    crack (0.4.5)
+      rexml
     crass (1.0.6)
-    cucumber (3.0.2)
+    cucumber (3.2.0)
       builder (>= 2.1.2)
-      cucumber-core (~> 3.0.0)
-      cucumber-expressions (~> 4.0.3)
+      cucumber-core (~> 3.2.0)
+      cucumber-expressions (~> 6.0.1)
       cucumber-wire (~> 0.0.1)
       diff-lcs (~> 1.3)
-      gherkin (~> 4.0)
+      gherkin (~> 5.1.0)
       multi_json (>= 1.7.5, < 2.0)
       multi_test (>= 0.1.2)
-    cucumber-core (3.0.0)
+    cucumber-core (3.2.1)
       backports (>= 3.8.0)
-      cucumber-tag_expressions (>= 1.0.1)
-      gherkin (>= 4.1.3)
-    cucumber-expressions (4.0.4)
-    cucumber-rails (2.0.0)
-      capybara (>= 2.12, < 4)
-      cucumber (>= 3.0.2, < 4)
-      mime-types (>= 2.0, < 4)
-      nokogiri (~> 1.8)
-      railties (>= 4.2, < 7)
-    cucumber-tag_expressions (2.0.2)
+      cucumber-tag_expressions (~> 1.1.0)
+      gherkin (~> 5.0)
+    cucumber-expressions (6.0.1)
+    cucumber-rails (2.4.0)
+      capybara (>= 2.18, < 4)
+      cucumber (>= 3.2, < 8)
+      mime-types (~> 3.3)
+      nokogiri (~> 1.10)
+      railties (>= 5.0, < 7)
+      rexml (~> 3.0)
+      webrick (~> 1.7)
+    cucumber-tag_expressions (1.1.1)
     cucumber-wire (0.0.1)
     daemons (1.3.1)
     dalli (2.7.10)
     database_cleaner (1.7.0)
     debug_inspector (0.0.3)
-    diff-lcs (1.3)
+    diff-lcs (1.4.4)
     diffy (3.2.1)
     disposable (0.1.15)
       representable (>= 2.2.3, < 2.4.0)
@@ -308,7 +319,7 @@ GEM
       nokogiri (>= 1.4.3)
     erubis (2.7.0)
     escape_utils (1.2.1)
-    et-orbi (1.1.6)
+    et-orbi (1.2.4)
       tzinfo
     eventmachine (1.2.7)
     excon (0.71.0)
@@ -330,10 +341,10 @@ GEM
       actionpack (>= 2.3.7)
       activesupport (>= 2.3.7)
       i18n (~> 0.4)
-    fugit (1.1.6)
-      et-orbi (~> 1.1, >= 1.1.6)
-      raabro (~> 1.1)
-    gherkin (4.1.3)
+    fugit (1.5.0)
+      et-orbi (~> 1.1, >= 1.1.8)
+      raabro (~> 1.4)
+    gherkin (5.1.0)
     github-markdown (0.6.9)
     globalid (0.4.2)
       activesupport (>= 4.2.0)
@@ -342,7 +353,7 @@ GEM
     has_scope (0.7.2)
       actionpack (>= 4.1)
       activesupport (>= 4.1)
-    hashdiff (0.3.9)
+    hashdiff (1.0.1)
     hashie (3.6.0)
     hiredis (0.6.3)
     html-pipeline (2.12.3)
@@ -386,6 +397,8 @@ GEM
       rest-client
     launchy (2.4.3)
       addressable (~> 2.3)
+    letter_opener (1.7.0)
+      launchy (~> 2.2)
     license_finder (6.12.0)
       bundler
       rubyzip (>= 1, < 3)
@@ -397,7 +410,7 @@ GEM
     listen (3.2.1)
       rb-fsevent (~> 0.10, >= 0.10.3)
       rb-inotify (~> 0.9, >= 0.9.10)
-    loofah (2.7.0)
+    loofah (2.11.0)
       crass (~> 1.0.2)
       nokogiri (>= 1.5.9)
     mail (2.7.1)
@@ -422,11 +435,11 @@ GEM
     middleware (0.1.0)
     mime-types (3.3.1)
       mime-types-data (~> 3.2015)
-    mime-types-data (3.2021.0212)
+    mime-types-data (3.2021.0704)
     mimemagic (0.3.10)
       nokogiri (~> 1)
       rake
-    mini_mime (1.0.2)
+    mini_mime (1.1.0)
     mini_portile2 (2.4.0)
     minitest (5.10.3)
     minitest-reporters (1.3.8)
@@ -438,7 +451,7 @@ GEM
     mocha (1.1.0)
       metaclass (~> 0.0.1)
     msgpack (1.3.1)
-    multi_json (1.14.1)
+    multi_json (1.15.0)
     multi_test (0.1.2)
     multi_xml (0.6.0)
     multipart-post (2.1.1)
@@ -502,8 +515,8 @@ GEM
     pry-stack_explorer (0.4.12)
       binding_of_caller (~> 0.7)
       pry (~> 0.13)
-    public_suffix (3.1.1)
-    raabro (1.1.6)
+    public_suffix (4.0.6)
+    raabro (1.4.0)
     rack (2.1.4)
     rack-no_animations (1.0.3)
     rack-openid (1.4.2)
@@ -559,7 +572,7 @@ GEM
       thor (>= 0.18.1, < 2.0)
     rainbow (3.0.0)
     raindrops (0.19.0)
-    rake (13.0.1)
+    rake (13.0.6)
     ratelimit (1.0.3)
       redis (>= 2.0.0)
       redis-namespace (>= 1.0.0)
@@ -576,10 +589,12 @@ GEM
     redis-namespace (1.7.0)
       redis (>= 3.0.4)
     redis-prescription (1.0.0)
+    redlock (1.2.1)
+      redis (>= 3.0.0, < 5.0)
     reform (2.0.5)
       disposable (~> 0.1.11)
       uber (~> 0.0.11)
-    regexp_parser (1.8.2)
+    regexp_parser (2.1.1)
     representable (2.3.0)
       uber (~> 0.0.7)
     request_store (1.4.1)
@@ -593,7 +608,7 @@ GEM
       netrc (~> 0.8)
     reverse_markdown (2.0.0)
       nokogiri
-    rexml (3.2.4)
+    rexml (3.2.5)
     riddle (2.4.0)
     rmagick (2.15.4)
     roar (1.0.4)
@@ -660,7 +675,6 @@ GEM
     ruby-progressbar (1.10.1)
     ruby_event_store (0.9.0)
     rubyzip (1.3.0)
-    safe_yaml (1.0.5)
     sass (3.4.25)
     sass-rails (5.0.7)
       railties (>= 4.0.0, < 6)
@@ -685,7 +699,7 @@ GEM
       redis (>= 3.3.5, < 4.2)
     sidekiq-batch (0.1.6)
       sidekiq (>= 3)
-    sidekiq-cron (1.0.4)
+    sidekiq-cron (1.2.0)
       fugit (~> 1.1)
       sidekiq (>= 4.2.1)
     sidekiq-lock (0.4.0)
@@ -772,7 +786,7 @@ GEM
     ts-datetime-delta (2.0.2)
       thinking-sphinx (>= 1.3.8)
     ttfunk (1.5.1)
-    tzinfo (1.2.7)
+    tzinfo (1.2.9)
       thread_safe (~> 0.1)
     uber (0.0.15)
     uglifier (4.1.19)
@@ -788,10 +802,10 @@ GEM
       rack
       unicorn
     uniform_notifier (1.10.0)
-    webmock (2.3.2)
+    webmock (3.8.3)
       addressable (>= 2.3.6)
       crack (>= 0.3.2)
-      hashdiff
+      hashdiff (>= 0.4.0, < 2.0.0)
     webpacker (4.3.0)
       activesupport (>= 4.2)
       rack-proxy (>= 0.6.1)
@@ -801,8 +815,6 @@ GEM
     websocket-driver (0.6.5)
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.5)
-    whenever (0.9.7)
-      chronic (>= 0.6.3)
     will_paginate (3.1.6)
     with_env (1.1.0)
     xml-simple (1.1.8)
@@ -832,6 +844,7 @@ DEPENDENCIES
   3scale_time_range (= 0.0.6)
   RedCloth (~> 4.3)
   active-docs!
+  activejob-uniqueness!
   activemerchant (~> 1.107.4)
   activemodel-serializers-xml
   activerecord-oracle_enhanced-adapter (~> 1.7.0)
@@ -852,7 +865,7 @@ DEPENDENCIES
   bugsnag (~> 6.11)
   bullet (~> 5.6)
   cancancan (~> 2.3.0)
-  capybara (~> 3.33)!
+  capybara (~> 3.35.3)!
   childprocess
   chronic
   ci_reporter_shell!
@@ -862,8 +875,8 @@ DEPENDENCIES
   colorize
   commonmarker
   compass-rails (~> 3.0.2)
-  cucumber (~> 3.0.2)
-  cucumber-rails (~> 2.0.0)
+  cucumber (~> 3.2.0)
+  cucumber-rails (~> 2.4.0)
   dalli (~> 2.7)
   database_cleaner (~> 1.7)
   developer_portal!
@@ -896,6 +909,7 @@ DEPENDENCIES
   jwt (~> 1.5.2)
   kubeclient
   launchy
+  letter_opener
   license_finder (~> 6.12.0)
   listen
   mail_view (~> 2.0.4)
@@ -985,10 +999,10 @@ DEPENDENCIES
   uglifier
   unicorn
   unicorn-rails
-  webmock (~> 2.3.2)
+  webmock (~> 3.8.0)
   webpacker (~> 4)
-  whenever (~> 0.9.7)
   will_paginate (~> 3.1.6)
+  with_env
   xpath (~> 3.2)
   yabeda-prometheus-mmap
   yabeda-rails
@@ -997,4 +1011,4 @@ DEPENDENCIES
   zip-zip
 
 BUNDLED WITH
-   1.17.3
+   2.2.25

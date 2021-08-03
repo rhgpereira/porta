@@ -66,10 +66,14 @@ Then "I {should} see button {string}" do |visible, label|
   assert_equal visible, has_button?(label)
 end
 
-Then "I {should} see button {string} within {string}" do |visible, label, selector|
-  within selector do
-    step %(I should #{visible ? 'see' : 'not see'} button "#{label}")
-  end
+# Remove?
+# Then "I should see button {string} {enabled}" do |field, enabled|
+#   button = find('button', text: field)
+#   assert_not_equal enabled, button['disabled']
+# end
+
+Then "I should see button {string} disabled" do |label|
+  assert find_button(label, disabled: true)
 end
 
 Then "the {string} select should not contain {string} option" do |label, text|

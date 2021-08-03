@@ -74,8 +74,8 @@ attach-to-workspace: &attach-to-workspace
   attach_workspace:
     at: .
 
-system-builder-ruby25: &system-builder-ruby25
-  image: quay.io/3scale/system-builder:ruby25
+system-builder-ruby26: &system-builder-ruby26
+  image: quay.io/3scale/system-builder:ruby26
   environment:
     BUNDLE_FROZEN: true
     BUNDLE_PATH: 'vendor/bundle'
@@ -154,15 +154,6 @@ build-envs:
 
 commands: # reusable commands with parameters
 
-  checkout-with-submodules:
-    steps:
-      - checkout
-      - run:
-          name: "Pull Submodules"
-          command: |
-            git submodule init
-            git submodule update
-
   install-gem-dependencies:
     parameters:
       extra-deps:
@@ -170,7 +161,7 @@ commands: # reusable commands with parameters
         type: steps
         default: []
     steps:
-      - checkout-with-submodules
+      - checkout
       - restore-gem-cache
       - steps: << parameters.extra-deps >>
       - run:
@@ -192,7 +183,7 @@ commands: # reusable commands with parameters
     steps:
       - add_ssh_keys:
           fingerprints:
-            - "17:be:79:a1:a0:c5:38:84:a7:3c:f2:af:87:d7:f3:cf"
+            - "aa:64:17:1e:6c:ab:2f:d2:ad:35:59:99:05:31:3e:87"
       - run:
           name: "Fetch oracle libraries"
           command: |
@@ -216,7 +207,7 @@ commands: # reusable commands with parameters
         type: steps
         default: []
     steps:
-      - checkout-with-submodules
+      - checkout
       - *attach-to-workspace
       - *use-example-config-files
       - steps: << parameters.extra-deps >>
@@ -224,7 +215,9 @@ commands: # reusable commands with parameters
       - run:
           name: Rspec tests
           command: |
-            bundle exec rspec --format progress $(circleci tests glob "spec/**/*_spec.rb" | circleci tests split --split-by=timings)
+            TESTS="$(circleci tests glob "spec/**/*_spec.rb" | circleci tests split --split-by=timings)"
+            echo "bundle exec rspec --format progress ${TESTS}"
+            bundle exec rspec --format progress ${TESTS}
       - upload-artifacts
 
   cucumber-tests:
@@ -234,7 +227,7 @@ commands: # reusable commands with parameters
         type: steps
         default: []
     steps:
-      - checkout-with-submodules
+      - checkout
       - *attach-to-workspace
       - steps: << parameters.extra-deps >>
       - prepare-db-for-tests
@@ -242,8 +235,9 @@ commands: # reusable commands with parameters
       - run:
           name: Run cucumber tests
           command: |
-            TEST=$(circleci tests glob "features/**/*.feature" | circleci tests split --split-by=timings)
-            bundle exec cucumber --profile ci ${TEST}
+            TESTS=$(circleci tests glob "features/**/*.feature" | circleci tests split --split-by=timings)
+            echo "bundle exec cucumber --profile ci ${TESTS}"
+            bundle exec cucumber --profile ci ${TESTS}
       - *enable-internet-access
       - upload-artifacts
       - store_artifacts:
@@ -257,7 +251,7 @@ commands: # reusable commands with parameters
         type: steps
         default: []
     steps:
-      - checkout-with-submodules
+      - checkout
       - *attach-to-workspace
       - *use-example-config-files
       - steps: << parameters.extra-deps >>
@@ -266,8 +260,9 @@ commands: # reusable commands with parameters
           name: Run Rails tests
           command: |
             taskname=$(echo $CIRCLE_JOB | sed -e 's/-\(postgres\|oracle\|[0-9]\).*//')
-            TEST=$(bundle exec rake "test:files:${taskname}" | circleci tests split --split-by=timings)
-            bundle exec rake test:run TEST="$TEST" TESTOPTS=--verbose --verbose --trace
+            TESTS=$(bundle exec rake "test:files:${taskname}" | circleci tests split --split-by=timings)
+            echo "bundle exec rake test:run  TESTOPTS=--verbose --verbose --trace TEST='${TESTS}'"
+            bundle exec rake test:run TEST="${TESTS}" TESTOPTS=--verbose --verbose --trace
       - upload-artifacts
 
   save-gem-cache:
@@ -294,69 +289,69 @@ commands: # reusable commands with parameters
 ##################################### CIRCLECI EXECUTORS ############################################
 
 executors:
-  builder-ruby25: &builder-ruby25
+  builder-ruby26: &builder-ruby26
     parameters:
       database:
         type: string
         default: mysql
     docker:
-      - *system-builder-ruby25
+      - *system-builder-ruby26
     environment:
       DB: << parameters.database >>
     working_directory: /opt/app-root/src/project
 
-  builder-with-mysql-ruby25: &builder-with-mysql-ruby25
+  builder-with-mysql-ruby26: &builder-with-mysql-ruby26
     resource_class: small
     docker:
-      - *system-builder-ruby25
+      - *system-builder-ruby26
       - *mysql-container
       - *memcached-container
       - *redis-container
     working_directory: /opt/app-root/src/project
     <<: *build-envs-mysql
 
-  builder-with-postgres-ruby25: &builder-with-postgres-ruby25
+  builder-with-postgres-ruby26: &builder-with-postgres-ruby26
     resource_class: small
     docker:
-      - *system-builder-ruby25
+      - *system-builder-ruby26
       - *postgres-container
       - *memcached-container
       - *redis-container
     working_directory: /opt/app-root/src/project
     <<: *build-envs-postgresql
 
-  builder-with-oracle-ruby25: &builder-with-oracle-ruby25
+  builder-with-oracle-ruby26: &builder-with-oracle-ruby26
     resource_class: large
     docker:
-      - *system-builder-ruby25
+      - *system-builder-ruby26
       - *oracle-db-container
       - *memcached-container
       - *redis-container
     working_directory: /opt/app-root/src/project
     <<: *build-envs-oracle
 
-  cucumber-with-mysql-ruby25: &cucumber-with-mysql-ruby25
+  cucumber-with-mysql-ruby26: &cucumber-with-mysql-ruby26
     resource_class: small
     docker:
-      - *system-builder-ruby25
+      - *system-builder-ruby26
       - *dnsmasq-container
       - *mysql-container
       - *memcached-container
       - *redis-container
 
-  cucumber-with-postgres-ruby25: &cucumber-with-postgres-ruby25
+  cucumber-with-postgres-ruby26: &cucumber-with-postgres-ruby26
     resource_class: small
     docker:
-      - *system-builder-ruby25
+      - *system-builder-ruby26
       - *dnsmasq-container
       - *postgres-container
       - *memcached-container
       - *redis-container
 
-  cucumber-with-oracle-ruby25: &cucumber-with-oracle-ruby25
+  cucumber-with-oracle-ruby26: &cucumber-with-oracle-ruby26
     resource_class: large
     docker:
-      - *system-builder-ruby25
+      - *system-builder-ruby26
       - *dnsmasq-container
       - *oracle-db-container
       - *memcached-container
@@ -369,7 +364,7 @@ jobs:
     parameters:
       executor:
         type: string
-        default: builder-ruby25
+        default: builder-ruby26
     executor:
       name: << parameters.executor >>
       database: mysql
@@ -380,7 +375,7 @@ jobs:
     parameters:
       executor:
         type: string
-        default: builder-ruby25
+        default: builder-ruby26
     executor:
       name: << parameters.executor >>
       database: postgresql
@@ -391,7 +386,7 @@ jobs:
     parameters:
       executor:
         type: string
-        default: builder-ruby25
+        default: builder-ruby26
     executor:
       name: << parameters.executor >>
       database: oracle
@@ -404,11 +399,11 @@ jobs:
     parameters:
       executor:
         type: string
-        default: builder-ruby25
+        default: builder-ruby26
     executor:
       name: << parameters.executor >>
     steps:
-      - checkout-with-submodules
+      - checkout
       - *restore-npm-cache
       - run:
           name: Install Node dependencies
@@ -426,11 +421,11 @@ jobs:
     parameters:
       executor:
         type: string
-        default: builder-ruby25
+        default: builder-ruby26
     executor:
       name: << parameters.executor >>
     steps:
-      - checkout-with-submodules
+      - checkout
       - *attach-to-workspace
       - run:
           name: Precompile assets
@@ -451,11 +446,11 @@ jobs:
     parameters:
       executor:
         type: string
-        default: builder-ruby25
+        default: builder-ruby26
     executor:
       name: << parameters.executor >>
     steps:
-      - checkout-with-submodules
+      - checkout
       - *attach-to-workspace
       - run:
           name: Licences check
@@ -480,34 +475,16 @@ jobs:
           path: doc/active_docs
           destination: active_docs
 
-  karma:
-    parameters:
-      executor:
-        type: string
-        default: builder-ruby25
-    executor:
-      name: << parameters.executor >>
-    steps:
-      - checkout-with-submodules
-      - *attach-to-workspace
-      - run:
-          name: Karma tests
-          command: |
-            yarn test --reporters dots,junit --browsers ChromeHeadless
-      - *store-junit-test-results
-      - *store-test-artifacts
-      - *upload-coverage
-
   jest:
     resource_class: medium+
     parameters:
       executor:
         type: string
-        default: builder-ruby25
+        default: builder-ruby26
     executor:
       name: << parameters.executor >>
     steps:
-      - checkout-with-submodules
+      - checkout
       - *attach-to-workspace
       - run:
           name: Jest specs
@@ -520,7 +497,7 @@ jobs:
     parameters:
       executor:
         type: string
-        default: builder-with-mysql-ruby25
+        default: builder-with-mysql-ruby26
     executor:
       name: << parameters.executor >>
     steps:
@@ -531,7 +508,7 @@ jobs:
     parameters:
       executor:
         type: string
-        default: builder-with-postgres-ruby25
+        default: builder-with-postgres-ruby26
     executor:
       name: << parameters.executor >>
     steps:
@@ -542,7 +519,7 @@ jobs:
     parameters:
       executor:
         type: string
-        default: builder-with-oracle-ruby25
+        default: builder-with-oracle-ruby26
     executor:
       name: << parameters.executor >>
     steps:
@@ -555,7 +532,7 @@ jobs:
     parameters:
       executor:
         type: string
-        default: builder-with-mysql-ruby25
+        default: builder-with-mysql-ruby26
     executor:
       name: << parameters.executor >>
     steps:
@@ -566,7 +543,7 @@ jobs:
     parameters:
       executor:
         type: string
-        default: builder-with-postgres-ruby25
+        default: builder-with-postgres-ruby26
     executor:
       name: << parameters.executor >>
     steps:
@@ -577,7 +554,7 @@ jobs:
     parameters:
       executor:
         type: string
-        default: builder-with-oracle-ruby25
+        default: builder-with-oracle-ruby26
     executor:
       name: << parameters.executor >>
     steps:
@@ -590,7 +567,7 @@ jobs:
     parameters:
       executor:
         type: string
-        default: builder-with-mysql-ruby25
+        default: builder-with-mysql-ruby26
     executor:
       name: << parameters.executor >>
     steps:
@@ -601,7 +578,7 @@ jobs:
     parameters:
       executor:
         type: string
-        default: builder-with-postgres-ruby25
+        default: builder-with-postgres-ruby26
     executor:
       name: << parameters.executor >>
     steps:
@@ -612,7 +589,7 @@ jobs:
     parameters:
       executor:
         type: string
-        default: builder-with-oracle-ruby25
+        default: builder-with-oracle-ruby26
     executor:
       name: << parameters.executor >>
     steps:
@@ -625,7 +602,7 @@ jobs:
     parameters:
       executor:
         type: string
-        default: builder-with-mysql-ruby25
+        default: builder-with-mysql-ruby26
     executor:
       name: << parameters.executor >>
     steps:
@@ -636,7 +613,7 @@ jobs:
     parameters:
       executor:
         type: string
-        default: builder-with-postgres-ruby25
+        default: builder-with-postgres-ruby26
     executor:
       name: << parameters.executor >>
     steps:
@@ -647,7 +624,7 @@ jobs:
     parameters:
       executor:
         type: string
-        default: builder-with-oracle-ruby25
+        default: builder-with-oracle-ruby26
     executor:
       name: << parameters.executor >>
     steps:
@@ -661,7 +638,7 @@ jobs:
     parameters:
       executor:
         type: string
-        default: cucumber-with-mysql-ruby25
+        default: cucumber-with-mysql-ruby26
     executor:
       name: << parameters.executor >>
     steps:
@@ -673,7 +650,7 @@ jobs:
     parameters:
       executor:
         type: string
-        default: cucumber-with-postgres-ruby25
+        default: cucumber-with-postgres-ruby26
     executor:
       name: << parameters.executor >>
     steps:
@@ -685,7 +662,7 @@ jobs:
     parameters:
       executor:
         type: string
-        default: cucumber-with-oracle-ruby25
+        default: cucumber-with-oracle-ruby26
     executor:
       name: << parameters.executor >>
     steps:
@@ -795,63 +772,6 @@ jobs:
             }" $SLACK_WEBHOOK_SYSTEM
           when: on_success
 
-  check_production_gemfile:
-    parameters:
-      executor:
-        type: string
-        default: builder-ruby25
-    executor:
-      name: << parameters.executor >>
-      database: mysql
-    steps:
-      - add_ssh_keys:
-          fingerprints:
-            - "17:be:79:a1:a0:c5:38:84:a7:3c:f2:af:87:d7:f3:cf"
-      - checkout-with-submodules
-      - run:
-          name: Keep production gemfile up to date
-          command: |
-            echo "keeping production gemfiles up to date"
-            git config user.email "3scale@redhat.com"
-            git config user.name "3scale"
-            make bundle
-            FILES_CHANGED=$(git status --porcelain | awk '{print $2}')
-            [[ -z "$FILES_CHANGED" ]] && exit 0
-            if [[ $FILES_CHANGED = "Gemfile.prod.lock"  ]]; then
-              git add Gemfile.prod.lock
-              git commit -m "Update Gemfile.prod.lock"
-              git push origin $(git rev-parse --abbrev-ref HEAD)
-            else
-              echo "More than Gemfile.prod.lock file was changed"
-              curl -X POST -H 'Content-type: application/json' \
-              --data \
-              "{ \
-                \"attachments\": [ \
-                { \
-                  \"fallback\": \"Build failed on master, for $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME.\", \
-                  \"color\": \"#CD0000\", \
-                  \"pretext\": \"Failed when trying to commit Gemfile.lock.prod. More than one file changed!! $FILES_CHANGED \", \
-                  \"author_name\": \"$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME\", \
-                  \"title\": \"Job: $CIRCLE_JOB \", \
-                  \"title_link\": \"$CIRCLE_BUILD_URL\", \
-                  \"text\": \"$CIRCLE_BUILD_URL\", \
-                  \"fields\": [ \
-                  { \
-                    \"title\": \"Commit\", \
-                    \"value\": \"$CIRCLE_SHA1\", \
-                    \"short\": false \
-                  } \
-                  ] \
-                } \
-                ] \
-              }" $SLACK_WEBHOOK_SYSTEM
-              exit 1
-            fi
-          environment:
-            BUNDLE_RETRY: 3
-            BUNDLE_JOBS: 3
-            BUNDLE_FROZEN: false
-            BUNDLE_DEPLOYMENT: false
 
 ##################################### CIRCLECI WORKFLOWS ############################################
 
@@ -1033,64 +953,55 @@ workflows:
       - lint:
           requires:
             - assets_precompile
-      - karma:
-          requires:
-            - dependencies_npm
       - jest:
           requires:
             - dependencies_npm
       - notify_success:
           requires:
             - lint
-            - karma
             - jest
           <<: *only-master-filter
       - notify_failure:
           requires:
             - lint
-            - karma
             - jest
           <<: *only-master-filter
 
-  production_gemfile-master:
-    jobs:
-      - check_production_gemfile:
-          <<: *only-master-filter
 
   ######## Nightly workflows
 
 
-  mysql_nightly_build_ruby25:
+  mysql_nightly_build_ruby26:
     jobs:
       - notify_start:
           <<: *only-master-filter
       - dependencies_bundler:
-          executor: builder-ruby25
+          executor: builder-ruby26
       - dependencies_npm:
-          executor: builder-ruby25
+          executor: builder-ruby26
       - assets_precompile:
-          executor: builder-ruby25
+          executor: builder-ruby26
           requires:
             - dependencies_bundler
             - dependencies_npm
       - unit:
-          executor: builder-with-mysql-ruby25
+          executor: builder-with-mysql-ruby26
           requires:
             - dependencies_bundler
       - functional:
-          executor: builder-with-mysql-ruby25
+          executor: builder-with-mysql-ruby26
           requires:
             - assets_precompile
       - integration:
-          executor: builder-with-mysql-ruby25
+          executor: builder-with-mysql-ruby26
           requires:
             - assets_precompile
       - rspec:
-          executor: builder-with-mysql-ruby25
+          executor: builder-with-mysql-ruby26
           requires:
             - dependencies_bundler
       - cucumber:
-          executor: cucumber-with-mysql-ruby25
+          executor: cucumber-with-mysql-ruby26
           requires:
             - assets_precompile
       - notify_success:
@@ -1111,37 +1022,37 @@ workflows:
           <<: *only-master-filter
     <<: *nightly-trigger
 
-  postgres_nightly_build_ruby25:
+  postgres_nightly_build_ruby26:
     jobs:
       - notify_start:
           <<: *only-master-filter
       - deps_bundler_postgres:
-          executor: builder-ruby25
+          executor: builder-ruby26
       - dependencies_npm:
-          executor: builder-ruby25
+          executor: builder-ruby26
       - assets_precompile:
-          executor: builder-ruby25
+          executor: builder-ruby26
           requires:
             - deps_bundler_postgres
             - dependencies_npm
       - unit-postgres:
-          executor: builder-with-postgres-ruby25
+          executor: builder-with-postgres-ruby26
           requires:
             - deps_bundler_postgres
       - functional-postgres:
-          executor: builder-with-postgres-ruby25
+          executor: builder-with-postgres-ruby26
           requires:
             - assets_precompile
       - integration-postgres:
-          executor: builder-with-postgres-ruby25
+          executor: builder-with-postgres-ruby26
           requires:
             - assets_precompile
       - rspec-postgres:
-          executor: builder-with-postgres-ruby25
+          executor: builder-with-postgres-ruby26
           requires:
             - deps_bundler_postgres
       - cucumber-postgres:
-          executor: cucumber-with-postgres-ruby25
+          executor: cucumber-with-postgres-ruby26
           requires:
             - assets_precompile
       - notify_success:
@@ -1162,38 +1073,38 @@ workflows:
           <<: *only-master-filter
     <<: *nightly-trigger
 
-  oracle_nightly_build_ruby25:
+  oracle_nightly_build_ruby26:
     jobs:
       - notify_start:
           <<: *only-master-filter
       - deps_bundler_oracle:
-          executor: builder-ruby25
+          executor: builder-ruby26
       - dependencies_npm:
-          executor: builder-ruby25
+          executor: builder-ruby26
       - assets_precompile:
-          executor: builder-ruby25
+          executor: builder-ruby26
           requires:
             - deps_bundler_oracle
             - dependencies_npm
 
       - unit-oracle:
-          executor: builder-with-oracle-ruby25
+          executor: builder-with-oracle-ruby26
           requires:
             - deps_bundler_oracle
       - functional-oracle:
-          executor: builder-with-oracle-ruby25
+          executor: builder-with-oracle-ruby26
           requires:
             - assets_precompile
       - integration-oracle:
-          executor: builder-with-oracle-ruby25
+          executor: builder-with-oracle-ruby26
           requires:
             - assets_precompile
       - rspec-oracle:
-          executor: builder-with-oracle-ruby25
+          executor: builder-with-oracle-ruby26
           requires:
             - deps_bundler_oracle
       - cucumber-oracle:
-          executor: cucumber-with-oracle-ruby25
+          executor: cucumber-with-oracle-ruby26
           requires:
             - assets_precompile
       - notify_success:
@@ -1215,41 +1126,35 @@ workflows:
           <<: *only-master-filter
     <<: *nightly-trigger
 
-  javascript_nightly_build_ruby25:
+  javascript_nightly_build_ruby26:
     jobs:
       - notify_start:
           <<: *only-master-filter
       - dependencies_bundler:
-          executor: builder-ruby25
+          executor: builder-ruby26
       - dependencies_npm:
-          executor: builder-ruby25
+          executor: builder-ruby26
       - assets_precompile:
-          executor: builder-ruby25
+          executor: builder-ruby26
           requires:
             - dependencies_bundler
             - dependencies_npm
       - lint:
-          executor: builder-ruby25
+          executor: builder-ruby26
           requires:
             - assets_precompile
-      - karma:
-          executor: builder-ruby25
-          requires:
-            - dependencies_npm
       - jest:
-          executor: builder-ruby25
+          executor: builder-ruby26
           requires:
             - dependencies_npm
       - notify_success:
           requires:
             - lint
-            - karma
             - jest
           <<: *only-master-filter
       - notify_failure:
           requires:
             - lint
-            - karma
             - jest
           <<: *only-master-filter
     <<: *nightly-trigger

@@ -44,7 +44,7 @@ class Api::ServicesControllerTest < ActionDispatch::IntegrationTest
       assert_response :success
       page = Nokogiri::HTML::Document.parse(response.body)
 
-      assert_template 'api/services/settings_apiap'
+      assert_template 'api/services/settings'
       section_titles = page.xpath("//fieldset[@class='inputs']/legend").text
 
       ['Deployment',
@@ -61,6 +61,33 @@ class Api::ServicesControllerTest < ActionDispatch::IntegrationTest
        'Usage Limit Exceeded Error'].each do |expected_title|
         section_titles.include? expected_title
       end
+    end
+
+    test 'shows the correct deployment option' do
+      # Default value
+      service.stubs(:deployment_option).returns(nil)
+      get settings_admin_service_path(service)
+
+      page = Nokogiri::HTML::Document.parse(response.body)
+      hosted_option = page.at_css('#service_deployment_option_hosted')
+      assert hosted_option.attribute('checked').present?
+      service.unstub(:deployment_option)
+
+      # Self managed
+      service.update!(deployment_option: 'self_managed')
+      get settings_admin_service_path(service)
+
+      page = Nokogiri::HTML::Document.parse(response.body)
+      self_managed_option = page.at_css('#service_deployment_option_self_managed')
+      assert self_managed_option.attribute('checked').present?
+
+      # Hosted
+      service.update!(deployment_option: 'hosted')
+      get settings_admin_service_path(service)
+
+      page = Nokogiri::HTML::Document.parse(response.body)
+      hosted_option = page.at_css('#service_deployment_option_hosted')
+      assert hosted_option.attribute('checked').present?
     end
 
     test 'update the settings' do

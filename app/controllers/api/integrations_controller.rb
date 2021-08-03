@@ -36,7 +36,7 @@ class Api::IntegrationsController < Api::BaseController
       flash.now[:error] = flash_message(:update_error)
       @api_test_form_error = true
 
-      render_edit_or_show
+      render :show
     end
   end
 
@@ -50,27 +50,7 @@ class Api::IntegrationsController < Api::BaseController
   end
 
   def show
-    respond_to do |format|
-      format.html do
-        @show_presenter = Api::IntegrationsShowPresenter.new(@proxy)
-      end
-
-      format.zip do
-
-        source = if provider_can_use?(:apicast_per_service)
-                   Apicast::UserSource.new(current_user)
-                 else
-                   Apicast::ProviderSource.new(@service.account)
-        end
-
-        generator = Apicast::ZipGenerator.new(source)
-
-        send_file generator.data,
-                  type: 'application/zip',
-                  disposition: 'attachment',
-                  filename: 'proxy_configs.zip'
-      end
-    end
+    @show_presenter = Api::IntegrationsShowPresenter.new(@proxy)
   end
 
   def toggle_apicast_version
@@ -109,9 +89,7 @@ class Api::IntegrationsController < Api::BaseController
     @proxy.reload
     @proxy.assign_attributes(proxy_params.except(:lock_version))
 
-    @last_message_bus_id = nil # don't want MessageBus showing flash message
-
-    render_edit_or_show status: :conflict
+    render :show, status: :conflict
   end
 
   def flash_message(key, opts = {})
@@ -122,44 +100,14 @@ class Api::IntegrationsController < Api::BaseController
     if @proxy.update_attributes(proxy_params)
       update_mapping_rules_position
       flash[:notice] = flash_message(:proxy_pro_update_sucess)
-      redirect_to_edit_or_show
+      redirect_to :show
     else
-      render_edit_or_show
+      render :show
     end
-  end
-
-  def async_update
-    if (@deploy_id = @proxy.save_and_async_deploy(proxy_params, current_user))
-      flash.now[:notice] = flash_message(:async_update_success)
-    else
-      attrs = params.fetch(:proxy, {}).fetch(:proxy_rules_attributes,{})
-      splitted = attrs.keys.group_by { |key| attrs[key]['_destroy'] == '1' }
-
-      @marked_for_destroy = splitted[true]
-      @marked_for_update = splitted[false]
-
-      flash.now[:error] = flash_message(:async_update_error)
-      @api_test_form_error = true
-    end
-
-    render_edit_or_show
-  end
-
-  # TODO: THREESCALE-3759 remove this method and related code
-  def edit_path
-    last_message_id = @last_message_bus_id
-
-    {
-      action: :edit,
-      last_id: last_message_id,
-      anchor: last_message_id ? 'second_nav' : 'proxy'
-    }.compact
   end
 
   def find_proxy
     @proxy = @service.proxy
-
-    @last_message_bus_id = params.fetch(:last_id) { last_message_bus_id(@proxy) } if message_bus?(@proxy)
   end
 
   def last_message_bus_id(proxy)
@@ -241,15 +189,5 @@ class Api::IntegrationsController < Api::BaseController
 
   def toggle_land_path
     @proxy.apicast_configuration_driven ? admin_service_integration_path(@service) : edit_admin_service_integration_path(@service)
-  end
-
-  # TODO: THREESCALE-3759 remove this method
-  def render_edit_or_show(opts = {})
-    render :show, opts
-  end
-
-  # TODO: THREESCALE-3759 remove this method
-  def redirect_to_edit_or_show
-    redirect_to :show
   end
 end

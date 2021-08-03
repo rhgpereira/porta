@@ -51,15 +51,15 @@ When "(I )follow {string}" do |link|
 end
 
 When "(I )fill in {string} with {string}" do |field, value|
-  fill_in(field, with: value, visible: true)
+  fill_in(field, with: value)
 end
 
 When "I fill in {string} with:" do |field, text|
-  fill_in(field, with: text, visible: true)
+  fill_in(field, with: text)
 end
 
 When "(I )fill in {string} for {string}" do |value, field, selector|
-  fill_in(field, with: value, visible: true)
+  fill_in(field, with: value)
 end
 
 # Use this to fill in an entire form with data from a table. Example:
@@ -79,18 +79,17 @@ When "(I )fill in the following:" do |fields|
   end
 end
 
+# When /^(?:|I )select "([^"]*)" from "([^"]*)"(?: within "([^"]*)")?$/ do |value, field, selector|
 When "(I )select {string} from {string}" do |value, field|
-  if page.has_css?('.pf-c-form__label', text: field)
-    select = find('.pf-c-form__label', text: field).sibling('.pf-c-select')
-    within select do
-      find('.pf-c-select__toggle-button').click unless select['class'].include?('pf-m-expanded')
-      click_on(value)
+  # with_scope(selector) do
+    if page.has_css?('.pf-c-form__label', text: field)
+      pf4_select(value, from: field)
+    else
+      # DEPRECATED: remove when all selects have been replaced for PF4
+      ThreeScale::Deprecation.warn "[cucumber] Detected a form not using PF4 css"
+      find_field(field).find(:option, value).select_option
     end
-  else
-    # DEPRECATED: remove when all selects have been replaced for PF4
-    ThreeScale::Deprecation.warn "[cucumber] Detected a form not using PF4 css"
-    find_field(field).find(:option, value).select_option
-  end
+  # end
 end
 
 When "(I )select {string} from {string} within {string}" do |value, field, selector|
@@ -203,4 +202,25 @@ end
 
 Then "show me the page" do
   save_and_open_page
+end
+
+# TODO: Ideally we would extend Node::Actions#select to satisfy Liskov instead of using a custom method.
+def pf4_select(value, from:)
+  select = find('.pf-c-form__label', text: from).sibling('.pf-c-select')
+  within select do
+    find('.pf-c-select__toggle').click unless select['class'].include?('pf-m-expanded')
+    click_on(value)
+  end
+end
+
+# TODO: Ideally we would extend Node::Actions#fill_in to satisfy Liskov instead of using a custom method.
+def fill_in(field, with:)
+  if page.has_css?('.pf-c-form__label', text: field)
+    input = find('.pf-c-form__label', text: field).sibling('input')
+    input.set with
+  else
+    # DEPRECATED: remove when all forms implement PF4
+    ThreeScale::Deprecation.warn "[cucumber] Detected a form not using PF4 css"
+    fill_in(field, with: with, visible: true)
+  end
 end

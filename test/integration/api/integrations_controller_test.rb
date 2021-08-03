@@ -221,10 +221,12 @@ class IntegrationsControllerTest < ActionDispatch::IntegrationTest
     proxy_attributes = attrs['proxy']
     proxy_attributes.delete('proxy_rules_attributes')
     api_backend = proxy_attributes.delete 'api_backend'
+    policies_config = proxy_attributes.delete 'policies_config'
     proxy.reload
 
     assert_equal proxy.attributes.slice(*proxy_attributes.keys), proxy_attributes
     assert_equal 'http://bye-world-api.3scale.net:80', proxy.api_backend
+    assert_includes proxy.policies_config.map(&:to_h), *JSON.parse(policies_config)
 
     assert_equal 1, proxy.proxy_rules.count
 
@@ -263,7 +265,6 @@ class IntegrationsControllerTest < ActionDispatch::IntegrationTest
   def test_example_curl
     FactoryBot.create(:service_token, service: service)
     FactoryBot.create(:proxy_config, proxy: proxy, environment: 'sandbox')
-    Api::IntegrationsShowPresenter.any_instance.expects(:apicast_config_ready?).returns(true).at_least_once
     Api::IntegrationsShowPresenter.any_instance.expects(:any_sandbox_configs?).returns(true).at_least_once
 
     Service.any_instance.expects(:oauth?).returns(true).at_least_once
@@ -287,22 +288,6 @@ class IntegrationsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_match "Promote v. #{config.version} to Production APIcast", response.body
-  end
-
-  test 'download nginx config' do
-    provider.create_onboarding
-    get admin_service_integration_path(service_id: service.id, format: :zip)
-
-    assert_response :success
-    assert_equal 'application/zip', response.content_type
-    assert_includes response.headers, 'Content-Transfer-Encoding', 'Content-Disposition'
-    assert_equal 'attachment; filename="proxy_configs.zip"', response['Content-Disposition']
-    assert_equal 'binary', response['Content-Transfer-Encoding']
-
-    Zip::InputStream.open(StringIO.new(response.body)) do |zip|
-      assert zip.get_next_entry
-    end
-
   end
 
   test 'promote to production' do

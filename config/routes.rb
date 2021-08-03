@@ -199,6 +199,18 @@ without fake Core server your after commit callbacks will crash and you might ge
     get 'admin', to: 'admin#show'
 
     namespace :admin do
+      # provider/admin/applications
+      resources :applications do
+        member do
+          put :accept
+          delete :reject
+          post :suspend
+          post :resume
+          put :change_user_key
+          put :change_plan
+          get :edit_redirect_url
+        end
+      end
       resources :backend_apis do
         scope module: :backend_apis do
           resources :metrics, :except => [:show] do
@@ -577,7 +589,7 @@ without fake Core server your after commit callbacks will crash and you might ge
           end
         end
 
-        resources :applications, :controller => 'buyers_applications', :only => [:index, :show, :create, :update, :destroy] do
+        resources :applications, :controller => 'buyers_applications', :except => :edit do
           collection do
             get :find
           end
@@ -646,7 +658,9 @@ without fake Core server your after commit callbacks will crash and you might ge
 
       resources :features, :controller => 'account_features', :except => [:new, :edit]
 
-      resource :nginx, :only => [:show], :defaults => { :format => 'zip' } do
+      resources :fields_definitions, controller: 'fields_definitions', except: %i[new edit]
+
+      resource :nginx do
         collection do
           get :spec
         end
@@ -804,7 +818,8 @@ without fake Core server your after commit callbacks will crash and you might ge
             end
           end
 
-          resources :applications, only: %i[index show edit]
+          # /apiconfig/services/:service_id/applications
+          resources :applications, only: %i[index new create]
           resources :api_docs, only: %i[index new edit update create], controller: '/admin/api_docs/service_api_docs' do
             member do
               get :preview
@@ -822,10 +837,8 @@ without fake Core server your after commit callbacks will crash and you might ge
           resource :integration, except: %i[create destroy edit] do
             member do
               patch 'promote_to_production'
-              patch 'toggle_apicast_version'
             end
           end
-          resources :proxy_logs, :only => [:index, :show ]
           resources :proxy_configs, only: %i(index show)
           resources :proxy_rules, except: %i[show], defaults: { owner_type: 'Proxy' }
           resource :policies, except: [:show, :destroy]
@@ -888,7 +901,8 @@ without fake Core server your after commit callbacks will crash and you might ge
             end
           end
 
-          resources :applications, except: %i[show edit]
+          # buyers/accounts/applications
+          resources :applications, only: %i[index new create]
 
           resources :service_contracts, :except => [:show] do
             member do
@@ -919,19 +933,6 @@ without fake Core server your after commit callbacks will crash and you might ge
         resources :contracts, :only => [] do
           resources :custom_plans, :only => [:create, :destroy]
           resources :custom_application_plans, :only => [:create, :destroy]
-        end
-        resources :applications do
-
-          member do
-            put :accept
-            delete :reject
-            post :suspend
-            post :resume
-            put :change_user_key
-            put :change_plan
-            get :edit_redirect_url
-          end
-
         end
         namespace :applications do
           namespace :bulk do

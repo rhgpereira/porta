@@ -84,14 +84,14 @@ When "I follow {string} within usage limits panel for {metric_on_application_pla
   step %(I follow "#{label}" within "##{dom_id(metric)}_slot")
 end
 
-def metrics
+def metrics_container
   find(:css, '#metrics')
 end
 
 And "limits hits of that plan to {int}" do |number|
   visit_edit_plan(@plan)
 
-  within metrics do
+  within metrics_container do
     click_on 'Edit limits of Hits'
     click_on 'New usage limit'
   end
@@ -115,8 +115,7 @@ def visit_edit_plan(plan)
 
   step %(I go to the application plans admin page)
 
-  plan_name = plan.name
-  within plans do
+  within plans_table do
     click_on plan.name
   end
 

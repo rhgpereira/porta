@@ -5,20 +5,27 @@ import React from 'react'
 import { ProductSelect } from 'NewApplication'
 import { mount } from 'enzyme'
 
-const product = {
-  id: '0',
+import type { Product } from 'NewApplication/types'
+
+const product: Product = {
+  id: 0,
   name: 'The Product',
   systemName: 'the_product',
   updatedAt: '',
   appPlans: [],
   servicePlans: [],
-  defaultServicePlan: null
+  defaultServicePlan: null,
+  defaultAppPlan: null,
+  buyerCanSelectPlan: false
 }
+const products = [product]
 const props = {
   product,
-  products: [product],
+  products,
+  productsCount: products.length,
   onSelectProduct: jest.fn(),
-  isDisabled: false
+  productsPath: '/products',
+  isDisabled: undefined
 }
 
 it('should render', () => {

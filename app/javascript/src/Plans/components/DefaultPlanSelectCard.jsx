@@ -1,20 +1,16 @@
 // @flow
 
 import * as React from 'react'
-import { post } from 'utilities'
-import {
-  Form,
-  FormGroup,
-  Card,
-  CardBody
-} from '@patternfly/react-core'
+
+import { Form, Card, CardBody } from '@patternfly/react-core'
 import { DefaultPlanSelect } from 'Plans'
-import { Spinner } from 'Common'
+import { ajax, createReactWrapper } from 'utilities'
 import * as alert from 'utilities/alert'
 import type { Product, Plan } from 'Types'
+
 import './DefaultPlanSelectCard.scss'
 
-export type Props = {
+type Props = {
   product: Product,
   initialDefaultPlan: Plan | null,
   path: string
@@ -31,7 +27,7 @@ const DefaultPlanSelectCard = ({ product, initialDefaultPlan, path }: Props): Re
     const body = plan.id >= 0 ? new URLSearchParams({ id: plan.id.toString() }) : undefined
     const url = path.replace(':id', String(product.id))
 
-    post(url, body)
+    ajax(url, { method: 'POST', body })
       .then(data => {
         if (data.ok) {
           alert.notice('Default plan was updated')
@@ -59,23 +55,18 @@ const DefaultPlanSelectCard = ({ product, initialDefaultPlan, path }: Props): Re
     <Card id="default_plan_card">
       <CardBody>
         <Form onSubmit={e => e.preventDefault()}>
-          <FormGroup
-            label="Default plan"
-            fieldId="application_plan_id"
-            helperText="Default application plan (if any) is selected automatically upon service subscription."
-          >
-            {isLoading && <Spinner size='sm' className='pf-u-ml-md' />}
-            <DefaultPlanSelect
-              plan={defaultPlan}
-              plans={availablePlans}
-              onSelectPlan={onSelectPlan}
-              isDisabled={isLoading}
-            />
-          </FormGroup>
+          <DefaultPlanSelect
+            plan={defaultPlan}
+            plans={availablePlans}
+            onSelectPlan={onSelectPlan}
+            isLoading={isLoading}
+          />
         </Form>
       </CardBody>
     </Card>
   )
 }
 
-export { DefaultPlanSelectCard }
+const DefaultPlanSelectWrapper = (props: Props, containerId: string): void => createReactWrapper(<DefaultPlanSelectCard {...props} />, containerId)
+
+export { DefaultPlanSelectCard, DefaultPlanSelectWrapper }

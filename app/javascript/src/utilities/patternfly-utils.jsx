@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 
+import escapeRegExp from 'lodash.escaperegexp'
 import { SelectOption } from '@patternfly/react-core'
 
 export type Record = {
@@ -30,7 +31,7 @@ type Props = Record & {
 
 export const toSelectOption = ({ id, name, description, disabled = false, className }: Props): React.Node => (
   <SelectOption
-    key={id}
+    key={String(id)}
     value={toSelectOptionObject({ id, name, description })}
     className={className}
     // TODO: when we upgrade PF, use description prop directly
@@ -39,3 +40,19 @@ export const toSelectOption = ({ id, name, description, disabled = false, classN
     isDisabled={disabled}
   />
 )
+
+/**
+ * It creates a callback that's to be passed to a PF4 select of variant "typeahead"
+ */
+export const handleOnFilter = (items: Array<Record>, getSelectOptionsForItems?: Array<Record> => Array<React.Node>): Function => {
+  return (e: SyntheticEvent<HTMLInputElement>) => {
+    const { value } = e.currentTarget
+    const term = new RegExp(escapeRegExp(value), 'i')
+
+    const filteredItems = value !== '' ? items.filter(b => term.test(b.name)) : items
+
+    return getSelectOptionsForItems ? getSelectOptionsForItems(filteredItems)
+      // $FlowIssue[prop-missing] description is optional
+      : filteredItems.map(toSelectOption)
+  }
+}

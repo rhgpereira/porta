@@ -6,17 +6,21 @@ import { BuyerSelect } from 'NewApplication'
 import { mount } from 'enzyme'
 
 const buyer = {
-  id: '0',
+  id: 0,
   name: 'The Buyer',
-  admin: 'admin',
+  admin: 'The Admin',
   contractedProducts: [],
   createApplicationPath: '',
-  createdAt: ''
+  createdAt: '',
+  multipleAppsAllowed: false
 }
+const buyers = [buyer]
 const props = {
   buyer,
-  buyers: [buyer],
+  buyers,
+  buyersCount: buyers.length,
   onSelectBuyer: jest.fn(),
+  buyersPath: '/buyers',
   isDisabled: false
 }
 

@@ -194,11 +194,12 @@ module System
     config.three_scale.features = ActiveSupport::OrderedOptions.new
     config.three_scale.features.merge!(try_config_for(:features) || {})
 
-    config.three_scale.message_bus = ActiveSupport::OrderedOptions.new
-    config.three_scale.message_bus.merge!(try_config_for(:message_bus) || {})
-
     config.domain_substitution = ActiveSupport::OrderedOptions.new
     config.domain_substitution.merge!(try_config_for(:domain_substitution) || {})
+
+    config.three_scale.cors = ActiveSupport::OrderedOptions.new
+    config.three_scale.cors.enabled = false
+    config.three_scale.cors.merge!(try_config_for(:cors) || {})
 
     three_scale = config_for(:settings).symbolize_keys
     three_scale[:error_reporting_stages] = three_scale[:error_reporting_stages].to_s.split(/\W+/)
@@ -221,13 +222,14 @@ module System
     require 'three_scale/deprecation'
     require 'three_scale/domain_substitution'
     require 'three_scale/middleware/multitenant'
+    require 'three_scale/middleware/cors'
 
     config.middleware.use ThreeScale::Middleware::Multitenant, :tenant_id
     config.middleware.insert_before Rack::Runtime, Rack::UTF8Sanitizer
     config.middleware.insert_before Rack::Runtime, Rack::XServedBy # we can pass hashed hostname as parameter
+    config.middleware.insert_before 0, ThreeScale::Middleware::Cors
 
     config.unicorn = ActiveSupport::OrderedOptions[after_fork: []]
-    config.unicorn.after_fork << MessageBus.method(:after_fork)
 
     config.action_dispatch.cookies_serializer = :hybrid
 
@@ -287,6 +289,9 @@ module System
         WARNING
       end
     end
+
+    # Fixes 'DEPRECATION WARNING: Time columns will become time zone aware in Rails 5.1' keeping backwards compatibility
+    config.active_record.time_zone_aware_types = [:datetime]
   end
 end
 

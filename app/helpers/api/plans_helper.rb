@@ -2,19 +2,20 @@
 
 module Api::PlansHelper
 
-  def default_application_plan_data(service, plans)
+  def change_application_plan_data(application)
     {
-      'service': service.to_json(root: false, only: %i[id name]),
-      'application-plans': application_plans_data(plans),
-      'current-plan': current_application_plan_data(service),
-      'path': masterize_admin_service_application_plans_path(':id')
+      'application-plans': application.available_application_plans.order_by(:name, :asc).to_json(root: false, only: %i[id name]),
+      'path': change_plan_provider_admin_application_path
     }
   end
 
-  def application_plans_data(plans)
-    plans.not_custom
-         .alphabetically
-         .to_json(root: false, only: %i[id name])
+  def default_application_plan_data(service, plans)
+    {
+      'service': service.to_json(root: false, only: %i[id name]),
+      'application-plans': plans.to_json(root: false, only: %i[id name]),
+      'current-plan': current_application_plan_data(service),
+      'path': masterize_admin_service_application_plans_path(':id')
+    }
   end
 
   def current_application_plan_data(service)
@@ -30,9 +31,7 @@ module Api::PlansHelper
   end
 
   def application_plans_index_data(plans)
-    plans.not_custom
-         .alphabetically
-         .decorate
+    plans.decorate
          .map(&:index_table_data)
   end
 

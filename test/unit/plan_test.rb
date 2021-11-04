@@ -431,7 +431,7 @@ class PlanTest < ActiveSupport::TestCase
         @plan.cost_per_month = 0.0
         assert @plan.free?
 
-        @plan.cost_per_month = BigDecimal.new('0.0')
+        @plan.cost_per_month = BigDecimal('0.0')
         assert @plan.free?
       end
 
@@ -576,17 +576,13 @@ class PlanTest < ActiveSupport::TestCase
   should "don't raise exception when setup_fee is nil" do
     plan = FactoryBot.build_stubbed(:application_plan)
     plan.setup_fee = nil
-    assert_nothing_raised(NoMethodError) do
-      plan.valid?
-    end
+    plan.valid?
   end
 
   should "don't raise exception when cost_per_month is nil" do
     plan = FactoryBot.build_stubbed(:application_plan)
     plan.cost_per_month = nil
-    assert_nothing_raised(NoMethodError) do
-      plan.valid?
-    end
+    plan.valid?
   end
 
   test 'setup_fee cannot be negative' do
@@ -597,7 +593,7 @@ class PlanTest < ActiveSupport::TestCase
     plan.setup_fee = 15.00
     assert plan.valid?
   end
-  
+
   test 'cost_per_month cannot be negative' do
     plan = FactoryBot.build_stubbed(:application_plan)
     plan.cost_per_month = -10.00
@@ -606,7 +602,7 @@ class PlanTest < ActiveSupport::TestCase
     plan.cost_per_month = 15.00
     assert plan.valid?
   end
-    
+
    test 'trial_period_days cannot be negative' do
     plan = FactoryBot.build_stubbed(:application_plan)
     plan.trial_period_days = -1

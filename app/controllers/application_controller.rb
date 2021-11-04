@@ -98,7 +98,7 @@ class ApplicationController < ActionController::Base
 
   def browser_not_modern?
     browser = Browser.new(request.env['HTTP_USER_AGENT'])
-    browser.known? && !browser.modern?
+    browser.known? && !modern_browser?(browser)
   end
 
   def cors
@@ -182,7 +182,7 @@ class ApplicationController < ActionController::Base
     options = options.dup
 
     respond_to do |format|
-      format.text { options[:text] = error }
+      format.text { options[:plain] = error }
       format.json { options[:json] = {:error => error} }
 
       format.xml do
@@ -192,7 +192,7 @@ class ApplicationController < ActionController::Base
 
       format.any do
         headers['Content-Type'] = 'text/plain'
-        options[:text] = error
+        options[:plain] = error
       end
     end
 
@@ -212,5 +212,20 @@ class ApplicationController < ActionController::Base
       end
       res
     end
+  end
+
+  def modern_browser?(browser)
+    mainstream_modern_browsers?(browser) || other_modern_browsers?(browser)
+  end
+
+  def mainstream_modern_browsers?(browser)
+    browser.webkit? ||
+      browser.firefox?('>= 18') ||
+      browser.opera?('>= 12')
+  end
+
+  def other_modern_browsers?(browser)
+    (browser.firefox? && browser.device.tablet? && browser.platform.android?('>= 14')) ||
+      (!browser.compatibility_view? && (browser.ie?('>= 9') || browser.edge?))
   end
 end

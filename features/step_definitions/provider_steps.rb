@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 def import_simple_layout(provider)
   simple_layout = SimpleLayout.new(provider)
   simple_layout.import_pages!
   simple_layout.import_js_and_css! if @javascript
 end
 
-Given(/^a provider "([^"]*)" signed up to (plan "[^"]*")$/) do |name, plan|
+Given "a provider {string} signed up to {plan}" do |name, plan|
   @provider = FactoryBot.create(:provider_account_with_pending_users_signed_up_to_no_plan,
                       org_name: name,
                       domain: name,
@@ -53,7 +55,7 @@ Given(/^there is no provider with domain "([^"]*)"$/) do |domain|
   Account.find_by_domain(domain).try!(&:destroy)
 end
 
-When(/^(provider ".+?") creates sample data$/) do |provider|
+When "{provider} creates sample data" do |provider|
   provider.create_sample_data!
 end
 
@@ -143,6 +145,15 @@ Given('stub integration errors dashboard') do
 end
 
 Given(/^a provider( is logged in)?$/) do |login|
+  setup_provider(login)
+end
+
+Given(/^a provider( is logged in)? with a product "([^"]*)"$/) do |login, name|
+  setup_provider(login)
+  @service = @provider.services.create!(name: name, mandatory_app_key: false)
+end
+
+def setup_provider(login)
   step 'a provider "foo.3scale.localhost"'
   step 'current domain is the admin domain of provider "foo.3scale.localhost"'
   step 'stub integration errors dashboard'

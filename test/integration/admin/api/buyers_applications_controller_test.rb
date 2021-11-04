@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'test_helper'
 
 class Admin::Api::BuyersApplicationsControllerTest < ActionDispatch::IntegrationTest
@@ -7,20 +9,19 @@ class Admin::Api::BuyersApplicationsControllerTest < ActionDispatch::Integration
     @service  = FactoryBot.create(:service, account: provider)
     @plan    = FactoryBot.create(:application_plan, service: @service)
     @buyer   = FactoryBot.create(:buyer_account, provider_account: provider)
+    @token = FactoryBot.create(:access_token, owner: provider.admin_users.first!, scopes: %w[account_management]).value
 
     host! provider.admin_domain
-
-    login_provider provider
   end
 
   def test_index
-    get admin_api_account_applications_path(account_id: @buyer.id, format: :xml)
+    get admin_api_account_applications_path(account_id: @buyer.id, format: :xml, access_token: @token)
 
     assert_response :success
   end
 
   def test_create
-    post admin_api_account_applications_path(account_id: @buyer.id, plan_id: @plan.id, format: :xml)
+    post admin_api_account_applications_path(account_id: @buyer.id, plan_id: @plan.id, format: :xml, access_token: @token)
 
     assert_response :success
   end
@@ -28,7 +29,7 @@ class Admin::Api::BuyersApplicationsControllerTest < ActionDispatch::Integration
   def test_delete
     application = FactoryBot.create(:cinstance, user_account: @buyer, service: @service)
 
-    delete admin_api_account_application_path(account_id: @buyer.id, id: application.id, format: :xml)
+    delete admin_api_account_application_path(account_id: @buyer.id, id: application.id, format: :xml, access_token: @token)
 
     assert_response :success
     assert_raises(ActiveRecord::RecordNotFound) { application.reload }
@@ -39,7 +40,8 @@ class Admin::Api::BuyersApplicationsControllerTest < ActionDispatch::Integration
       application_id: 'cba0c140',
       account_id:     @buyer.id,
       plan_id:        @plan.id,
-      format:         :xml
+      format:         :xml,
+      access_token: @token
     }
 
     post admin_api_account_applications_path(params)
@@ -74,7 +76,7 @@ class Admin::Api::BuyersApplicationsControllerTest < ActionDispatch::Integration
     end
 
     test 'cannot change plan to a different service' do
-      service  = FactoryBot.create(:service, account: @provider)
+      service = FactoryBot.create(:service, account: @provider)
       new_plan_other_service = FactoryBot.create(:application_plan, service: service)
       request_plan_change new_plan_other_service
       assert_response :unprocessable_entity
@@ -109,7 +111,7 @@ class Admin::Api::BuyersApplicationsControllerTest < ActionDispatch::Integration
 
     def request_plan_change(new_plan = create_new_plan_same_service)
       params = { access_token: @access_token.value, plan_id: new_plan.id }
-      put change_plan_admin_api_account_application_path(account_id: @buyer.id, id: @application.id, format: :xml), params
+      put change_plan_admin_api_account_application_path(account_id: @buyer.id, id: @application.id, format: :xml), params: params
     end
 
     def create_new_plan_same_service

@@ -8,6 +8,7 @@ module CMS
                                          space_after_headers: true,
                                          fenced_code_blocks: true,
                                          prettify: true
+                                         tables: true
       def convert(markup)
         RENDERER.render(markup.to_s)
       end
